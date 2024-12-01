@@ -1,4 +1,4 @@
-package day01nice
+package day01r
 
 import java.io.File
 import kotlin.math.abs

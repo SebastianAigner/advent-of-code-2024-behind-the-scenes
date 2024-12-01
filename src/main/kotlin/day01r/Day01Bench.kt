@@ -1,4 +1,4 @@
-package day01nice
+package day01r
 
 import kotlinx.benchmark.*
 import kotlin.collections.unzip
