@@ -11,35 +11,40 @@ fun main() {
         a.toInt() to b.toInt()
     }
     val (firstColumn, secondColumn) = sbsList.unzip()
-    part1(firstColumn, secondColumn)
-    part2(secondColumn, firstColumn)
+    println(part1(firstColumn, secondColumn))
+    println(part2(firstColumn, secondColumn))
+    println(part2Map(firstColumn, secondColumn))
 }
 
 private fun part1(
     firstColumn: List<Int>,
     secondColumn: List<Int>,
-) {
+): Int {
     val sortedColumnPairs = firstColumn.sorted().zip(secondColumn.sorted())
     val distances = sortedColumnPairs.sumOf { (firstColumnItem, secondColumnItem) ->
         abs(firstColumnItem - secondColumnItem)
     }
-    println(distances)
-
+    return distances
 }
 
-private fun part2(
-    secondColumn: List<Int>,
+fun part2(
     firstColumn: List<Int>,
-) {
+    secondColumn: List<Int>,
+): Int {
     val sum = firstColumn.sumOf { firstColumnItem: Int ->
         firstColumnItem * secondColumn.count { secondColumnItem -> secondColumnItem == firstColumnItem }
     }
-    println(sum)
+    return sum
+}
 
+fun part2Map(
+    firstColumn: List<Int>,
+    secondColumn: List<Int>,
+): Int {
     val counts = secondColumn.groupingBy { it }.eachCount()
     val fasterSum = firstColumn.sumOf { firstColumnItem: Int ->
         firstColumnItem * (counts[firstColumnItem] ?: 0)
     }
-    println(fasterSum)
+    return fasterSum
 }
 
