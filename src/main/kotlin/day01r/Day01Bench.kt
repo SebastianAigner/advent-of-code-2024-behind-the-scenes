@@ -20,12 +20,24 @@ class MyBenchmark {
     }
 
     @Benchmark
-    fun benchmarkNormal() {
-        part2(firstColumn, secondColumn)
+    fun benchmarkNormal(): Int {
+        return part2(firstColumn, secondColumn)
     }
 
     @Benchmark
-    fun benchmarkMap() {
-        part2Map(firstColumn, secondColumn)
+    fun benchmarkMap(): Int {
+        return part2Map(firstColumn, secondColumn)
     }
 }
+
+/*
+main summary:
+Benchmark                     Mode  Cnt      Score      Error  Units
+MyBenchmark.benchmarkMap     thrpt    5  41199,401 ± 2259,729  ops/s
+MyBenchmark.benchmarkNormal  thrpt    5   1444,920 ±   17,086  ops/s
+
+main summary:
+Benchmark                     Mode  Cnt      Score      Error  Units
+MyBenchmark.benchmarkMap     thrpt    5  41940,628 ± 1565,903  ops/s
+MyBenchmark.benchmarkNormal  thrpt    5   1441,546 ±   10,528  ops/s
+ */
