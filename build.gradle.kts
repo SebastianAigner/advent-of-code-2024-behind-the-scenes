@@ -22,6 +22,9 @@ tasks.test {
 }
 kotlin {
     jvmToolchain(20)
+    compilerOptions {
+        freeCompilerArgs.add("-Xwhen-guards")
+    }
 }
 
 // build.gradle.kts

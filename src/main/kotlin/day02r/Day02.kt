@@ -15,7 +15,7 @@ fun main() {
 
 private fun part1(reports: List<List<Int>>) {
     val safeEntries = reports.count {
-        it.isReportSafe()
+        isReportSafe(it)
     }
     println(safeEntries)
 }
@@ -27,23 +27,26 @@ private fun part2(reports: List<List<Int>>) {
     println(safeDampenedEntries)
 }
 
-private fun List<Int>.isReportSafe(): Boolean {
-    val pairs = zipWithNext()
+private fun isReportSafe(levels: List<Int>): Boolean {
+    val pairs = levels.zipWithNext()
     val allAreIncreasing = pairs.all { (a, b) ->
-        b - a in 1..3
+        (b - a) in 1..3
     }
     val allAreDecreasing = pairs.all { (a, b) ->
-        b - a in -3..-1
+        (b - a) in -3..-1
     }
     return allAreIncreasing || allAreDecreasing
 }
 
 fun List<Int>.isDampenedReportSafe(): Boolean {
-    for (indexToRemove in this.indices) {
+//    for (indexToRemove in this.indices) {
+//        val dampened = this.filterIndexed { index, _ -> index != indexToRemove }
+//        if (dampened.isReportSafe()) {
+//            return true
+//        }
+//    }
+    return indices.any { indexToRemove ->
         val dampened = this.filterIndexed { index, _ -> index != indexToRemove }
-        if (dampened.isReportSafe()) {
-            return true
-        }
+        isReportSafe(dampened)
     }
-    return false
 }

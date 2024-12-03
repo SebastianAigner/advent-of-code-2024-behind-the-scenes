@@ -19,25 +19,23 @@ fun String.isSafeDampened(): Boolean {
     val numbers = this.split(" ").map { string -> string.toInt() }
     for(idx in numbers.indices) {
         val dampened = numbers.filterIndexed { index, i -> index != idx }
-        if(dampened.isListSafe()) return true
+        if(isListSafe(dampened)) return true
     }
     return false
 }
 
 fun String.isSafe(): Boolean {
     val numbers = this.split(" ").map { string -> string.toInt() }
-    return numbers.isListSafe()
+    return isListSafe(numbers)
 }
 
-private fun List<Int>.isListSafe(): Boolean {
-    val pairs = zipWithNext()
-    val allAreIncreasing = pairs.all { pair ->
-        pair.second - pair.first in 1..3
+private fun isListSafe(levels: List<Int>): Boolean {
+    val levelPairs = levels.zipWithNext()
+    val allAreIncreasing = levelPairs.all { (a, b) ->
+        b - a in 1..3
     }
-    val allAreDecreasing = pairs.all { pair ->
-        val slope = pair.second - pair.first
-        println("$pair -> $slope")
-        slope in (-3)..(-1)
+    val allAreDecreasing = levelPairs.all { (a, b) ->
+        b - a in (-3)..(-1)
     }
     return allAreIncreasing || allAreDecreasing
 }
