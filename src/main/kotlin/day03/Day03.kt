@@ -11,15 +11,15 @@ fun main() {
     println(all)
     var enabled = true
     var acc = 0L
-    for(instruction in all) {
-        if(instruction == "do()") {
+    for (instruction in all) {
+        if (instruction == "do()") {
             enabled = true
         }
-        if(instruction == "don't()") {
+        if (instruction == "don't()") {
             enabled = false
         }
-        if(enabled && instruction.startsWith("mul(")) {
-            val (a,b) = instruction.removePrefix("mul(").removeSuffix(")").split(",")
+        if (enabled && instruction.startsWith("mul(")) {
+            val (a, b) = instruction.removePrefix("mul(").removeSuffix(")").split(",")
             acc += a.toInt() * b.toInt()
         }
     }

@@ -1,7 +1,16 @@
+import org.jetbrains.compose.reload.ComposeHotRun
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
+
+
 plugins {
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.allopen") version "2.0.21"
+    kotlin("jvm") version "2.1.0-firework.31"
+    kotlin("plugin.allopen") version "2.1.0-firework.31"
+    kotlin("plugin.compose") version "2.1.0-firework.31" // <- Use special builds of Kotlin/Compose Compiler
+
     id("org.jetbrains.kotlinx.benchmark") version "0.4.13"
+    id("org.jetbrains.compose") version "1.7.1"
+    id("org.jetbrains.compose-hot-reload") version "1.0.0-dev.31.1" // <- add this additionally
+
 }
 
 group = "org.example"
@@ -9,12 +18,23 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    google()
+    maven("https://packages.jetbrains.team/maven/p/firework/dev")
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:0.4.13")
+    implementation(compose.desktop.currentOs)
+    implementation(compose.foundation)
+    implementation(compose.material3)
+}
 
+composeCompiler {
+    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
+}
+
+tasks.register<ComposeHotRun>("runHot") {
+    mainClass.set("io.sebi.AppKt")
 }
 
 tasks.test {

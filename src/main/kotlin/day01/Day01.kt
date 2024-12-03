@@ -15,7 +15,7 @@ fun main() {
     val paired = theAs.zip(theBs)
     val distances = paired.map { pair -> abs(pair.first - pair.second) }
     println(distances.sum())
-    val sum= paired.sumOf { pair ->
+    val sum = paired.sumOf { pair ->
         pair.first * theBs.count { i -> i == pair.first }
     }
     println(sum)
