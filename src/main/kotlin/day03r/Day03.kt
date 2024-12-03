@@ -26,7 +26,7 @@ fun part1(lines: List<String>) {
 }
 
 fun part2(lines: List<String>) {
-    val mulRegex = """mul\(\d{1,3},\d{1,3}\)|do(n't)*\(\)""".toRegex()
+    val mulRegex = """mul\(\d{1,3},\d{1,3}\)|do(n't)?\(\)""".toRegex()
     val all = lines.flatMap { string ->
         mulRegex.findAll(string).map { it.value }
     }

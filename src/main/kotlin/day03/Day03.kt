@@ -4,7 +4,7 @@ import java.io.File
 
 fun main() {
     val x = File("input/day03.txt").readLines()
-    val mulRegex = """mul\(\d{1,3},\d{1,3}\)|do(n't)*\(\)""".toRegex()
+    val mulRegex = """mul\(\d{1,3},\d{1,3}\)|do(n't)?\(\)""".toRegex()
     val all = x.flatMap { string ->
         mulRegex.findAll(string).map { it.value }
     }

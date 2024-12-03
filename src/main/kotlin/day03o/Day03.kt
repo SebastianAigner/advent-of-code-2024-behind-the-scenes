@@ -23,7 +23,7 @@ fun Instruction(instruction: String): Instruction {
 }
 
 fun main() {
-    val mulRegex = """mul\(\d{1,3},\d{1,3}\)|do(n't)*\(\)""".toRegex()
+    val mulRegex = """mul\(\d{1,3},\d{1,3}\)|do(n't)?\(\)""".toRegex()
     val all = input.flatMap { string ->
         mulRegex.findAll(string).map { Instruction(it.value) }
     }
