@@ -20,7 +20,6 @@ fun addValidMultiplicationsPart1(section: String): Long {
 fun addValidMultiplicationsPart2(fullMemory: String): Long {
     var sum = 0L
     var enabled = true
-
     """$mulRegex|$doRegex|$dontRegex""".toRegex().findAll(fullMemory).forEach { match ->
         when (match.value) {
             "don't()" -> enabled = false

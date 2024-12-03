@@ -8,6 +8,9 @@ private const val DAY = "03"
 private const val mulRegex = """mul\((\d{1,3}),(\d{1,3})\)"""
 private const val mulRegexWithLabels = """mul\((?<first>\d{1,3}),(?<second>\d{1,3})\)"""
 
+private const val chunkDontsRegex = """don't\(\).*do\(\)"""
+private const val chunkDontsEndRegex = """don't\(\).*"""
+
 fun addValidMultiplicationsPart1WithLabels(section: String): Long {
     return mulRegexWithLabels.toRegex().findAll(section).sumOf { match ->
         val first = match.groups["first"]?.value?.toLong() ?: 0
@@ -32,6 +35,12 @@ fun addValidMultiplicationsPart1GroupValuesAndLabels(section: String): Long {
     }
 }
 
+//fun part2Chuncked(memory: String): Long {
+//    return addValidMultiplicationsPart1(
+//        chunkDontsRegex.toRegex().replace(memory, "X").replace(chunkDontsEndRegex.toRegex(), "X")
+//    )
+//}
+
 fun main() {
     fun part2WithStringInput(input: String): Long {
         return addValidMultiplicationsPart2(input)
@@ -43,4 +52,6 @@ fun main() {
     val inputString = readInputAsString("day${DAY}/Day$DAY")
     println("PART 1 with Labels: " + addValidMultiplicationsPart1WithLabels(inputString))
     println("PART 2 with String: " + part2WithStringInput(inputString))
+//    println("PART 2 with chunks: " + part2Chuncked(inputString))
+
 }

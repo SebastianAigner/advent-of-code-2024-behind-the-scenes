@@ -6,9 +6,9 @@ import kotlin.text.removeSurrounding
 val input = File("input/day03.txt").readLines()
 
 sealed interface Instruction
-object Do : Instruction
-object Dont : Instruction
-class Mul(val a: Int, val b: Int) : Instruction
+data object Do : Instruction
+data object Dont : Instruction
+data class Mul(val a: Int, val b: Int) : Instruction
 
 fun Instruction(instruction: String): Instruction {
     return when {
@@ -18,6 +18,7 @@ fun Instruction(instruction: String): Instruction {
             val (a, b) = instruction.removeSurrounding("mul(", ")").split(",")
             Mul(a.toInt(), b.toInt())
         }
+
         else -> error("Unknown instruction $instruction")
     }
 }
@@ -31,11 +32,11 @@ fun main() {
     var enabled = true
     var acc = 0L
     for (instruction in all) {
-        when(instruction) {
+        when (instruction) {
             is Do -> enabled = true
             is Dont -> enabled = false
             is Mul if enabled -> acc += instruction.a * instruction.b
-            is Mul -> println("Encountered disabled $instruction")
+            is Mul /* disabled */ -> println("Encountered disabled $instruction")
         }
     }
     println(acc)

@@ -14,12 +14,12 @@ class BenchmarkDay03 {
     val inputFileName = "day$day/Day$day"
     var input = ""
 
-//    @Benchmark
+    //    @Benchmark
     fun joinStrings(): String {
         return readInput(inputFileName).joinToString()
     }
 
-//    @Benchmark
+    //    @Benchmark
     fun readAsString(): String {
         return readInputAsString(inputFileName)
     }
