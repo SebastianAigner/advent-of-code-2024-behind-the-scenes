@@ -1,6 +1,7 @@
 package day03o
 
 import java.io.File
+import kotlin.text.removeSurrounding
 
 val input = File("input/day03.txt").readLines()
 
@@ -14,7 +15,7 @@ fun Instruction(instruction: String): Instruction {
         instruction == "do()" -> Do
         instruction == "don't()" -> Dont
         instruction.startsWith("mul(") -> {
-            val (a, b) = instruction.removePrefix("mul(").removeSuffix(")").split(",")
+            val (a, b) = instruction.removeSurrounding("mul(", ")").split(",")
             Mul(a.toInt(), b.toInt())
         }
         else -> error("Unknown instruction $instruction")
