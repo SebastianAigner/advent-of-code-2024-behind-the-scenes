@@ -92,46 +92,49 @@ data class Grid(val elems: List<List<Char>>) {
             return false // invalid cross-center
         }
         // we start at the 'A' of 'MAS', because it is the center.
+        val fdm = if (getAtPos(centerX - 1, centerY - 1) == 'M') {
+            colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY - 1), almostStarColor, 80))
+            true
+        } else {
+            false
+        }
+        val fds = if (getAtPos(centerX + 1, centerY + 1) == 'S') {
+            colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY + 1), almostStarColor, 80))
+            true
+        } else {
+            false
+        }
         val isFallingDiagonalMAS =
-            if (getAtPos(centerX - 1, centerY - 1) == 'M') {
-                true
-            } else {
-                false
-            }
-                    &&
-                    if (getAtPos(centerX + 1, centerY + 1) == 'S') {
-                        true
-                    } else {
-                        false
-                    }
+            fdm && fds
         val isFallingDiagonalSAM =
             if (getAtPos(centerX - 1, centerY - 1) == 'S') {
+                colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY - 1), almostStarColor, 80))
                 true
             } else {
                 false
             }
                     &&
                     if (getAtPos(centerX + 1, centerY + 1) == 'M') {
+                        colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY + 1), almostStarColor, 80))
                         true
                     } else {
                         false
                     }
         val fallingDiagonalOk = isFallingDiagonalMAS || isFallingDiagonalSAM
 
-        val isRisingDiagonalMAS =
-            if (getAtPos(centerX - 1, centerY + 1) == 'M') {
-                colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY + 1), almostStarColor, 80))
-                true
-            } else {
-                false
-            }
-                    &&
-                    if (getAtPos(centerX + 1, centerY - 1) == 'S') {
-                        colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY - 1), almostStarColor, 80))
-                        true
-                    } else {
-                        false
-                    }
+        val isRM = if (getAtPos(centerX - 1, centerY + 1) == 'M') {
+            colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY + 1), almostStarColor, 80))
+            true
+        } else {
+            false
+        }
+        val isRS = if (getAtPos(centerX + 1, centerY - 1) == 'S') {
+            colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY - 1), almostStarColor, 80))
+            true
+        } else {
+            false
+        }
+        val isRisingDiagonalMAS = isRM && isRS
         val isRisingDiagonalSAM =
             if (getAtPos(centerX - 1, centerY + 1) == 'S') {
                 colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY + 1), almostStarColor, 80))
