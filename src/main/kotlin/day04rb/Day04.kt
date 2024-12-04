@@ -6,7 +6,7 @@ import java.io.File
 
 data class Vec2(val x: Int, val y: Int)
 
-data class Grid(val elems: List<List<Char>>) {
+data class Grid(private val elems: List<List<Char>>) {
     val allowedDirections = listOf(
         Vec2(1, 0), // east
         Vec2(1, 1), // southeast
@@ -17,6 +17,14 @@ data class Grid(val elems: List<List<Char>>) {
         Vec2(0, -1), // north
         Vec2(1, -1), // northeast
     )
+
+    val indices = sequence {
+        for (y in elems[0].indices) {
+            for (x in elems.indices) {
+                yield(Pair<Int, Int>(x, y))
+            }
+        }
+    }
 
     fun getAtPos(x: Int, y: Int): Char? = elems.getOrNull(y)?.getOrNull(x)
 
@@ -71,20 +79,16 @@ fun main() {
 
 private fun part1(grid: Grid) {
     var xmasWordCount = 0
-    for (startY in grid.elems[0].indices) {
-        for (startX in grid.elems.indices) {
-            xmasWordCount += grid.countXmasWordsForPosition(startX, startY)
-        }
+    for ((startX, startY) in grid.indices) {
+        xmasWordCount += grid.countXmasWordsForPosition(startX, startY)
     }
     println(xmasWordCount)
 }
 
 private fun part2(grid: Grid) {
     var crossCount = 0
-    for (centerY in grid.elems[0].indices) {
-        for (centerX in grid.elems.indices) {
-            crossCount += if (grid.isMASCrossAtPosition(centerX, centerY)) 1 else 0
-        }
+    for ((centerX, centerY) in grid.indices) {
+        crossCount += if (grid.isMASCrossAtPosition(centerX, centerY)) 1 else 0
     }
     println(crossCount)
 }
