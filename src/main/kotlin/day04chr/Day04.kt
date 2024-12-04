@@ -2,9 +2,19 @@
 
 package day04chr
 
+import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import java.io.File
 
 data class Vec2(val x: Int, val y: Int)
+
+data class ColorEvent(val loc: Vec2, val color: Color, val priority: Int)
+
+val colorFlow = MutableSharedFlow<ColorEvent>()
 
 data class Grid(val elems: List<List<Char>>) {
     val allowedDirections = listOf(
@@ -26,50 +36,135 @@ data class Grid(val elems: List<List<Char>>) {
         }
     }
 
-    fun getAtPos(x: Int, y: Int): Char? = elems.getOrNull(y)?.getOrNull(x)
 
-    fun countXmasWordsForPosition(startX: Int, startY: Int): Int {
+    suspend fun getAtPos(x: Int, y: Int, noDelay: Boolean = false): Char? {
+        val elem = elems.getOrNull(y)?.getOrNull(x)
+        if (elem != null) {
+            colorFlow.emit(ColorEvent(Vec2(x, y), Color(0xffe0e0e0), 99))
+            if (!noDelay) {
+                delay(100)
+            }
+        }
+        return elem
+    }
+
+    suspend fun countXmasWordsForPosition(startX: Int, startY: Int): Int {
         return allowedDirections.count { direction ->
+            if (getAtPos(startX, startY, true) != 'X') {
+                delay(50)
+                return@count false
+            }
             checkXmasWordForDirection(startX, startY, direction)
         }
     }
 
-    private fun checkXmasWordForDirection(startX: Int, startY: Int, direction: Vec2): Boolean {
+    private suspend fun checkXmasWordForDirection(startX: Int, startY: Int, direction: Vec2): Boolean {
         var runningX = startX
         var runningY = startY
+        if (getAtPos(runningX, runningY, true) != 'X') {
+            return false
+        }
 
         for (letter in listOf('X', 'M', 'A', 'S')) {
             if (getAtPos(runningX, runningY) != letter) {
                 return false
             }
+            colorFlow.emit(ColorEvent(Vec2(runningX, runningY), Color(0xFFc4ffff), 50))
+            runningX += direction.x
+            runningY += direction.y
+        }
+        println("FOUND ONE at $startX $startY")
+
+        runningX = startX
+        runningY = startY
+
+        repeat(4) {
+            colorFlow.emit(ColorEvent(Vec2(runningX, runningY), Color.Cyan, 10))
+            delay(25)
             runningX += direction.x
             runningY += direction.y
         }
         return true
     }
 
-    fun isMASCrossAtPosition(centerX: Int, centerY: Int): Boolean {
+    suspend fun isMASCrossAtPosition(centerX: Int, centerY: Int): Boolean {
         if (getAtPos(centerX, centerY) != 'A') {
             return false // invalid cross-center
         }
         // we start at the 'A' of 'MAS', because it is the center.
         val isFallingDiagonalMAS =
-            getAtPos(centerX - 1, centerY - 1) == 'M' && getAtPos(centerX + 1, centerY + 1) == 'S'
+            if (getAtPos(centerX - 1, centerY - 1) == 'M') {
+                true
+            } else {
+                false
+            }
+                    &&
+                    if (getAtPos(centerX + 1, centerY + 1) == 'S') {
+                        true
+                    } else {
+                        false
+                    }
         val isFallingDiagonalSAM =
-            getAtPos(centerX - 1, centerY - 1) == 'S' && getAtPos(centerX + 1, centerY + 1) == 'M'
+            if (getAtPos(centerX - 1, centerY - 1) == 'S') {
+                true
+            } else {
+                false
+            }
+                    &&
+                    if (getAtPos(centerX + 1, centerY + 1) == 'M') {
+                        true
+                    } else {
+                        false
+                    }
         val fallingDiagonalOk = isFallingDiagonalMAS || isFallingDiagonalSAM
 
         val isRisingDiagonalMAS =
-            getAtPos(centerX - 1, centerY + 1) == 'M' && getAtPos(centerX + 1, centerY - 1) == 'S'
+            if (getAtPos(centerX - 1, centerY + 1) == 'M') {
+                colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY + 1), almostStarColor, 80))
+                true
+            } else {
+                false
+            }
+                    &&
+                    if (getAtPos(centerX + 1, centerY - 1) == 'S') {
+                        colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY - 1), almostStarColor, 80))
+                        true
+                    } else {
+                        false
+                    }
         val isRisingDiagonalSAM =
-            getAtPos(centerX - 1, centerY + 1) == 'S' && getAtPos(centerX + 1, centerY - 1) == 'M'
+            if (getAtPos(centerX - 1, centerY + 1) == 'S') {
+                colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY + 1), almostStarColor, 80))
+                true
+            } else {
+                false
+            }
+                    &&
+                    if (getAtPos(centerX + 1, centerY - 1) == 'M') {
+                        colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY - 1), almostStarColor, 80))
+                        true
+                    } else {
+                        false
+                    }
         val risingDiagonalOk = isRisingDiagonalMAS || isRisingDiagonalSAM
-
-        return risingDiagonalOk && fallingDiagonalOk
+        val totallyOk = fallingDiagonalOk && risingDiagonalOk
+        if (totallyOk) {
+            colorFlow.emit(ColorEvent(Vec2(centerX, centerY), starCenterColor, 1))
+            colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY + 1), starArmColor, 1))
+            colorFlow.emit(ColorEvent(Vec2(centerX - 1, centerY - 1), starArmColor, 1))
+            colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY + 1), starArmColor, 1))
+            colorFlow.emit(ColorEvent(Vec2(centerX + 1, centerY - 1), starArmColor, 1))
+        }
+        return totallyOk
     }
 }
 
-fun main() {
+val starCenterColor = Color(0xFF00c0ff)
+val starArmColor = Color(0xff0086b3)
+val almostStarColor = Color(0xFF004d67)
+
+
+suspend fun main() {
     val rawInput = File("input/day04.txt")
     val input = rawInput.readLines()
     val grid = Grid(input.map { it.toCharArray().toList() })
@@ -77,7 +172,7 @@ fun main() {
     part2(grid)
 }
 
-private fun part1(grid: Grid) {
+private suspend fun part1(grid: Grid) {
     var xmasWordCount = 0
     for ((startX, startY) in grid.indices) {
         xmasWordCount += grid.countXmasWordsForPosition(startX, startY)
@@ -85,7 +180,7 @@ private fun part1(grid: Grid) {
     println(xmasWordCount)
 }
 
-private fun part2(grid: Grid) {
+private suspend fun part2(grid: Grid) {
     var crossCount = 0
     for ((centerX, centerY) in grid.indices) {
         crossCount += if (grid.isMASCrossAtPosition(centerX, centerY)) 1 else 0

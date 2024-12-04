@@ -24,6 +24,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:0.4.13")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     implementation(compose.desktop.currentOs)
     implementation(compose.foundation)
     implementation(compose.material3)
