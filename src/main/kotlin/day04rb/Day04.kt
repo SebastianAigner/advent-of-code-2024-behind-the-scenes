@@ -1,6 +1,6 @@
 @file:Suppress("DuplicatedCode")
 
-package day04r
+package day04rb
 
 import java.io.File
 
@@ -18,14 +18,9 @@ data class Grid(val elems: List<List<Char>>) {
         Vec2(1, -1), // northeast
     )
 
-    fun getAtPos(x: Int, y: Int): Char? {
-        return elems.getOrNull(y)?.getOrNull(x)
-    }
+    fun getAtPos(x: Int, y: Int): Char? = elems.getOrNull(y)?.getOrNull(x)
 
     fun countXmasWordsForPosition(startX: Int, startY: Int): Int {
-        if (getAtPos(startX, startY) != 'X') {
-            return 0 // invalid word start; also covered by logic of checkXmasWordForDirection
-        }
         return allowedDirections.count { direction ->
             checkXmasWordForDirection(startX, startY, direction)
         }
@@ -34,10 +29,8 @@ data class Grid(val elems: List<List<Char>>) {
     private fun checkXmasWordForDirection(startX: Int, startY: Int, direction: Vec2): Boolean {
         var runningX = startX
         var runningY = startY
+
         for (letter in listOf('X', 'M', 'A', 'S')) {
-            if (runningY !in elems.indices || runningX !in elems[0].indices) {
-                return false // out of bounds; but also covered by getAtPos returning null
-            }
             if (getAtPos(runningX, runningY) != letter) {
                 return false
             }
