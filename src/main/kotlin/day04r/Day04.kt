@@ -28,6 +28,10 @@ data class Grid(val elems: List<List<Char>>) {
         }
     }
 
+    fun getAtPos(x: Int, y: Int): Char? {
+        return this.elems.getOrNull(y)?.getOrNull(x)
+    }
+
     private fun checkXmasWordForDirection(startX: Int, startY: Int, direction: Vec2): Boolean {
         var runningX = startX
         var runningY = startY
@@ -86,11 +90,8 @@ private fun part1(grid: Grid) {
     var sum = 0
     for (startY in 0..grid.elems[0].lastIndex) {
         for (startX in 0..grid.elems.lastIndex) {
-            val foundAt = grid.countXmasWordsForPosition(startX, startY)
-            sum += foundAt
+            sum += grid.countXmasWordsForPosition(startX, startY)
         }
     }
-
-    println(grid.elems[0])
     println(sum)
 }
