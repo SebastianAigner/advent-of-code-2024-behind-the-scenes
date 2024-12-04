@@ -42,6 +42,7 @@ import java.util.regex.PatternSyntaxException
 
 fun main() {
     singleWindowApplication(
+        title = "Day 4",
         alwaysOnTop = true
     ) {
         DevelopmentEntryPoint {
