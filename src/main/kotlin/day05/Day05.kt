@@ -9,18 +9,15 @@ data class OrderingRule(val before: Int, val after: Int)
 
 data class Update(val numbers: List<Int>) {
     fun isValid(rules: List<OrderingRule>): Boolean {
-        for(rule in rules) {
-            if(!isSingleRuleValid(rule)) {
-                return false
-            }
+        return rules.all { rule ->
+            isSingleRuleValid(rule)
         }
-        return true
     }
 
     fun isSingleRuleValid(rule: OrderingRule): Boolean {
         val beforeLoc = numbers.indexOf(rule.before)
         val afterLoc = numbers.indexOf(rule.after)
-        if(beforeLoc == -1 || afterLoc == -1) {
+        if (beforeLoc == -1 || afterLoc == -1) {
             // the rule doesn't apply, we're ok
             return true
         }
@@ -28,8 +25,8 @@ data class Update(val numbers: List<Int>) {
     }
 
     fun producePartiallyBetterUpdate(rules: List<OrderingRule>): Update {
-        for(rule in rules) {
-            if(isSingleRuleValid(rule)) {
+        for (rule in rules) {
+            if (isSingleRuleValid(rule)) {
                 continue
             }
             // we have found an offending rule
@@ -52,15 +49,15 @@ data class Update(val numbers: List<Int>) {
         var curr = this
         do {
             curr = curr.producePartiallyBetterUpdate(rules)
-        } while(!curr.isValid(rules))
+        } while (!curr.isValid(rules))
         return curr
     }
 
     fun tryToBeSneaky(rules: List<OrderingRule>): Update {
         var mut = numbers.toMutableList()
-        while(true) {
+        while (true) {
             mut.shuffle()
-            if(Update(mut).isValid(rules)) {
+            if (Update(mut).isValid(rules)) {
                 return Update(mut)
             }
         }
@@ -74,18 +71,20 @@ data class Update(val numbers: List<Int>) {
 
 fun main() {
     val lines = input.readLines()
-    val orderingRules = lines.takeWhile { string -> string.isNotBlank() }.map {
-        val (before, after) = it.split("|")
-        OrderingRule(before.toInt(), after.toInt())
-    }
-    val updates = lines.takeLastWhile { string -> string.isNotBlank() }.map { string ->
-        Update(string.split(",").map { string ->
-            string.toInt()
-        })
-    }
+    val orderingRules = lines
+        .takeWhile { line -> line.isNotBlank() }
+        .map {
+            val (before, after) = it.split("|")
+            OrderingRule(before.toInt(), after.toInt())
+        }
+    val updates = lines
+        .takeLastWhile { line -> line.isNotBlank() }
+        .map { line ->
+            Update(line.split(",").map { it.toInt() })
+        }
 
-    val res = part1(updates, orderingRules)
-    val res2 = part2(updates, orderingRules)
+    val res = measureTimedValue { part1(updates, orderingRules) }
+    val res2 = measureTimedValue { part2(updates, orderingRules) }
 
     println(res)
     println(res2)
@@ -95,30 +94,25 @@ private fun part1(
     updates: List<Update>,
     orderingRules: List<OrderingRule>,
 ): Int {
-    var sum = 0
-    for (update in updates) {
-        if (update.isValid(orderingRules)) {
-            sum += update.middleNum()
+    return updates.sumOf {
+        if (it.isValid(orderingRules)) {
+            it.middleNum()
+        } else {
+            0
         }
     }
-    return sum
 }
 
 private fun part2(
     updates: List<Update>,
     orderingRules: List<OrderingRule>,
 ): Int {
-    val invalidUpdates = buildList {
-        for(update in updates) {
-            if(!update.isValid(orderingRules)) {
-                add(update)
-            }
-        }
+    val invalidUpdates = updates.filterNot { update ->
+        update.isValid(orderingRules)
     }
-    var fastinvalidSum = 0
-    for (update in invalidUpdates) {
-        val fixed = update.produceTotallyBetterUpdate(orderingRules)
-        fastinvalidSum += fixed.middleNum()
+    return invalidUpdates.sumOf {
+        it
+            .produceTotallyBetterUpdate(orderingRules)
+            .middleNum()
     }
-    return fastinvalidSum
 }
