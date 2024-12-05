@@ -37,7 +37,6 @@ data class Update(val numbers: List<Int>) {
             newOrder[aftIdx] = rule.before
             val new = Update(newOrder)
             check(new.isSingleRuleValid(rule)) // we have fixed *one* rule, this is now a partially better update.
-            check(new.isSingleRuleValid(rule))
 
             return new // possible optimization: apply other rules as well.
         }
