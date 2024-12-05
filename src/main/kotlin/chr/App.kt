@@ -34,6 +34,7 @@ import day04chr.ColorEvent
 import day04chr.Grid
 import day04chr.Vec2
 import day04chr.colorFlow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
@@ -98,54 +99,59 @@ fun App() {
             }
         }
         val coroutineScope = rememberCoroutineScope()
-        Column(
-            modifier = Modifier.align(Alignment.BottomEnd),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        ControlPanel(coroutineScope)
+    }
+}
+
+@Composable
+private fun BoxScope.ControlPanel(coroutineScope: CoroutineScope) {
+    Column(
+        modifier = Modifier.Companion.align(Alignment.BottomEnd).padding(10.dp),
+        horizontalAlignment = Alignment.End,
+    ) {
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    grid.indices.forEach {
+                        grid.countXmasWordsForPosition(it.first, it.second)
+                    }
+                }
+            }
         ) {
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        grid.indices.forEach {
-                            grid.countXmasWordsForPosition(it.first, it.second)
-                        }
+            Text("Find words")
+        }
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    grid.indices.drop(CROP * CROP / 2).forEach {
+                        grid.countXmasWordsForPosition(it.first, it.second)
                     }
                 }
-            ) {
-                Text("Find words")
             }
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        grid.indices.drop(CROP * CROP / 2).forEach {
-                            grid.countXmasWordsForPosition(it.first, it.second)
-                        }
+        ) {
+            Text("Find words (2)")
+        }
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    grid.indices.forEach {
+                        grid.isMASCrossAtPosition(it.first, it.second)
                     }
                 }
-            ) {
-                Text("Find words (2)")
             }
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        grid.indices.forEach {
-                            grid.isMASCrossAtPosition(it.first, it.second)
-                        }
+        ) {
+            Text("Find MAS-crosses")
+        }
+        Button(
+            onClick = {
+                coroutineScope.launch {
+                    grid.indices.drop(CROP * CROP / 2).forEach {
+                        grid.isMASCrossAtPosition(it.first, it.second)
                     }
                 }
-            ) {
-                Text("Find MAS-crosses")
             }
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        grid.indices.drop(CROP * CROP / 2).forEach {
-                            grid.isMASCrossAtPosition(it.first, it.second)
-                        }
-                    }
-                }
-            ) {
-                Text("Find MAS-crosses (2)")
-            }
+        ) {
+            Text("Find MAS-crosses (2)")
         }
     }
 }
