@@ -1,6 +1,7 @@
 package day05
 
 import java.io.File
+import kotlin.time.measureTimedValue
 
 val input = File("input/day05.txt")
 
@@ -9,45 +10,39 @@ data class OrderingRule(val before: Int, val after: Int)
 data class Update(val numbers: List<Int>) {
     fun isValid(rules: List<OrderingRule>): Boolean {
         for(rule in rules) {
-            if(!isValid(rule)) {
+            if(!isSingleRuleValid(rule)) {
                 return false
             }
         }
         return true
     }
 
-    fun isValid(rule: OrderingRule): Boolean {
-        // e.g. 7 before 10
-        val (before, after) = rule
-        val beforeLoc = numbers.indexOf(before)
-        val afterLoc = numbers.indexOf(after)
+    fun isSingleRuleValid(rule: OrderingRule): Boolean {
+        val beforeLoc = numbers.indexOf(rule.before)
+        val afterLoc = numbers.indexOf(rule.after)
         if(beforeLoc == -1 || afterLoc == -1) {
             // the rule doesn't apply, we're ok
             return true
         }
-        if(beforeLoc < afterLoc) {
-            return true
-        } else {
-            return false
-        }
+        return beforeLoc < afterLoc
     }
 
     fun producePartiallyBetterUpdate(rules: List<OrderingRule>): Update {
         for(rule in rules) {
-            if(isValid(rule)) {
+            if(isSingleRuleValid(rule)) {
                 continue
             }
             // we have found an offending rule
-            println("$rule is false in $this")
-            val (before, after) = rule
             val newOrder = this.numbers.toMutableList()
-            val befIdx = newOrder.indexOf(before)
-            val aftIdx = newOrder.indexOf(after)
-            newOrder[befIdx] = after
-            newOrder[aftIdx] = before
+            val befIdx = newOrder.indexOf(rule.before)
+            val aftIdx = newOrder.indexOf(rule.after)
+            newOrder[befIdx] = rule.after
+            newOrder[aftIdx] = rule.before
             val new = Update(newOrder)
-            check(new.isValid(rule)) // we have fixed *one* rule, this is now a partially better update.
-            return new
+            check(new.isSingleRuleValid(rule)) // we have fixed *one* rule, this is now a partially better update.
+            check(new.isSingleRuleValid(rule))
+
+            return new // possible optimization: apply other rules as well.
         }
         // all rules are valid, we're ok.
         return this
@@ -88,13 +83,31 @@ fun main() {
             string.toInt()
         })
     }
+
+    val res = part1(updates, orderingRules)
+    val res2 = part2(updates, orderingRules)
+
+    println(res)
+    println(res2)
+}
+
+private fun part1(
+    updates: List<Update>,
+    orderingRules: List<OrderingRule>,
+): Int {
     var sum = 0
-    for(update in updates) {
-        if(update.isValid(orderingRules)) {
+    for (update in updates) {
+        if (update.isValid(orderingRules)) {
             sum += update.middleNum()
         }
     }
+    return sum
+}
 
+private fun part2(
+    updates: List<Update>,
+    orderingRules: List<OrderingRule>,
+): Int {
     val invalidUpdates = buildList {
         for(update in updates) {
             if(!update.isValid(orderingRules)) {
@@ -102,13 +115,10 @@ fun main() {
             }
         }
     }
-    println("working on ${invalidUpdates.count()} invalid updates")
-
     var fastinvalidSum = 0
-    for((index, update) in invalidUpdates.withIndex()) {
-        println("working on $index")
+    for (update in invalidUpdates) {
         val fixed = update.produceTotallyBetterUpdate(orderingRules)
         fastinvalidSum += fixed.middleNum()
     }
-    println(fastinvalidSum)
+    return fastinvalidSum
 }
