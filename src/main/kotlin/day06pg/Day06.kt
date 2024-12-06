@@ -51,6 +51,13 @@ fun main() {
     part2(lines)
 }
 
+private fun part1(lines: List<List<Char>>) {
+    val visited = simulateGuardPath(lines)
+
+    //p1
+    println(visited.onSuccess { value -> value.distinctBy { record -> record.loc }.size })
+}
+
 private fun part2(lines: List<List<Char>>) {
     var cnt = AtomicInteger(0)
     runBlocking(Dispatchers.Default) {
@@ -79,12 +86,7 @@ fun simulatePlacedObstruction(lines: List<List<Char>>, obsX: Int, obsY: Int): Re
     return simulateGuardPath(workingCopy)
 }
 
-private fun part1(lines: List<List<Char>>) {
-    val visited = simulateGuardPath(lines)
 
-    //p1
-    println(visited.onSuccess { value -> value.distinctBy { record -> record.loc }.size })
-}
 
 fun getGuardStartingPosition(lines: List<List<Char>>): Vec2 {
     for (y in lines.indices) {
