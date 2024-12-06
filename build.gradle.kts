@@ -46,6 +46,7 @@ kotlin {
     jvmToolchain(20)
     compilerOptions {
         freeCompilerArgs.add("-Xwhen-guards")
+        freeCompilerArgs.add("-Xnon-local-break-continue")
     }
 }
 

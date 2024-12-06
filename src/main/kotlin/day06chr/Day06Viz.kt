@@ -137,12 +137,12 @@ private fun SingleCell(
         Cell.Visited -> Color.Black.copy(0.05f)
     }
 
-    val zIndex = if(bumpScale.value > 1.00f) {
+    val zIndex = if (bumpScale.value > 1.00f) {
         1f
     } else {
         0f
     }
-    val coolC = if(bumpScale.value > 1.1f) {
+    val coolC = if (bumpScale.value > 1.1f) {
         Color(0xFFffa500)
     } else {
         color
@@ -153,7 +153,8 @@ private fun SingleCell(
             this.scaleX = bumpScale.value
             this.scaleY = bumpScale.value
             this.clip = false
-        }.padding(scale.dp / 6).size(scale.dp).background(coolC).clearAndSetSemantics { }.then(if(bumpScale.value > 1.0f) Modifier.zIndex(1.0f) else Modifier),
+        }.padding(scale.dp / 6).size(scale.dp).background(coolC).clearAndSetSemantics { }
+            .then(if (bumpScale.value > 1.0f) Modifier.zIndex(1.0f) else Modifier),
     ) {
     }
 }
