@@ -35,7 +35,8 @@ composeCompiler {
 }
 
 tasks.register<ComposeHotRun>("runHot") {
-    mainClass.set("io.sebi.AppKt")
+//    mainClass.set("io.sebi.AppKt")
+    mainClass.set("day06chr.Day06VizKt")
 }
 
 tasks.test {
