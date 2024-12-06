@@ -31,7 +31,15 @@ data class Vec2(val x: Int, val y: Int) {
     operator fun plus(other: Vec2) = Vec2(this.x + other.x, this.y + other.y)
 }
 
-data class GuardWalkRecord(val loc: Vec2, val heading: GuardHeading)
+data class GuardWalkRecord(val loc: Vec2, val heading: GuardHeading) {
+    fun step(): GuardWalkRecord {
+        return GuardWalkRecord(loc + heading.step, heading)
+    }
+
+    fun turnRight(): GuardWalkRecord {
+        return GuardWalkRecord(loc, heading.turnRight())
+    }
+}
 
 fun main() {
     val lines = input.readLines().map { string ->
@@ -61,65 +69,59 @@ private fun part2(lines: List<List<Char>>) {
 }
 
 fun simulatePlacedObstruction(lines: List<List<Char>>, obsX: Int, obsY: Int): Result<List<GuardWalkRecord>> {
-    // place the obstruction
     val tile = lines[obsY][obsX]
     if (tile == '^' || tile == '#') {
+        // this is either not allowed or wouldn't modify, so we don't count it as a failure.
         return Result.success(emptyList())
     }
     val workingCopy = lines.map { chars -> chars.toMutableList() }.toMutableList()
     workingCopy[obsY][obsX] = '#' // no need for 'O'.
-    val res = simulateGuardPath(workingCopy)
-    return res
+    return simulateGuardPath(workingCopy)
 }
 
 private fun part1(lines: List<List<Char>>) {
     val visited = simulateGuardPath(lines)
 
     //p1
-    println(
-        visited
-            .onSuccess { value ->
-                value.distinctBy { record -> record.loc }.size
-            })
+    println(visited.onSuccess { value -> value.distinctBy { record -> record.loc }.size })
 }
 
-private fun simulateGuardPath(lines: List<List<Char>>): Result<List<GuardWalkRecord>> {
-    var guardPos = Vec2(-1, -1)
-    var guardHeading = GuardHeading.NORTH
-    val visited = mutableListOf<GuardWalkRecord>()
+fun getGuardStartingPosition(lines: List<List<Char>>): Vec2 {
     for (y in lines.indices) {
         for (x in lines[0].indices) {
             if (lines[y][x] == '^') {
-                guardPos = Vec2(x, y)
-                visited += GuardWalkRecord(guardPos, guardHeading)
+                return Vec2(x, y)
             }
         }
     }
-    check(guardPos.y != -1 && guardPos.x != -1)
+    error("No guard starting position found.")
+}
+
+private fun simulateGuardPath(lines: List<List<Char>>): Result<List<GuardWalkRecord>> {
+    var currentGuardRecord = GuardWalkRecord(getGuardStartingPosition(lines), GuardHeading.NORTH)
+    val visited = mutableListOf<GuardWalkRecord>(currentGuardRecord)
     fun getTile(x: Int, y: Int): Char {
         return if (y !in lines.indices || x !in lines[0].indices) '?' else lines[y][x]
     }
-    while (guardPos.y in lines.indices && guardPos.x in lines[0].indices) {
+    while (currentGuardRecord.loc.y in lines.indices && currentGuardRecord.loc.x in lines[0].indices) {
         // take a step
-        val attemptedNewPos = guardPos + guardHeading.step
-        val targetTile = getTile(attemptedNewPos.x, attemptedNewPos.y)
-        if (targetTile == '.' || targetTile == '^') {
-            guardPos = attemptedNewPos
-            //println("took a step to $guardPos")
-            val record = GuardWalkRecord(attemptedNewPos, guardHeading)
-            if (record in visited) {
-               println("this feels familiar.")
-                return Result.failure(IllegalPathStateException())
+        val attemptedNewPos = currentGuardRecord.step()
+        val targetTile = getTile(attemptedNewPos.loc.x, attemptedNewPos.loc.y)
+        when (targetTile) {
+            '.', '^' -> {
+                currentGuardRecord = attemptedNewPos
+                if (currentGuardRecord in visited) {
+                    println("this feels familiar.")
+                    return Result.failure(IllegalPathStateException())
+                }
+                visited += currentGuardRecord
             }
-            visited += record
-        } else if (targetTile == '#') {
-           // println("hit a thing")
-            guardHeading = guardHeading.turnRight()
-        } else if (targetTile == '?') {
-           // println("we're out of bounds at $attemptedNewPos")
-            break
-        } else {
-            //println("i've never seen a $targetTile before")
+            '#' -> {
+                currentGuardRecord = currentGuardRecord.turnRight()
+            }
+            '?' -> {
+                break
+            }
         }
         //debugPrint(lines,visited)
     }
