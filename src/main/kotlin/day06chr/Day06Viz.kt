@@ -18,12 +18,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.launchApplication
 import androidx.compose.ui.window.singleWindowApplication
 import androidx.compose.ui.zIndex
 import day06pg.Vec2
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import java.io.File
 
@@ -118,8 +122,10 @@ private fun SingleCell(
         bumpFlow.filter { (x, y) ->
             y == i && x == j
         }.collect { value ->
-            bumpScale.animateTo(1.5f, tween(durationMillis = 500))
-            bumpScale.animateTo(1f, tween(durationMillis = 1000))
+            launch {
+                bumpScale.animateTo(1.5f, tween(durationMillis = 500))
+                bumpScale.animateTo(1f, tween(durationMillis = 1000))
+            }
         }
     }
 
@@ -147,7 +153,7 @@ private fun SingleCell(
             this.scaleX = bumpScale.value
             this.scaleY = bumpScale.value
             this.clip = false
-        }.size(scale.dp).background(coolC).clearAndSetSemantics { }.zIndex(zIndex),
+        }.padding(scale.dp / 6).size(scale.dp).background(coolC).clearAndSetSemantics { }.then(if(bumpScale.value > 1.0f) Modifier.zIndex(1.0f) else Modifier),
     ) {
     }
 }
@@ -190,7 +196,9 @@ fun Day6() {
 
     val maze by remember(isSample) { mutableStateOf(Maze(if (isSample) day06Sample else File("input/day06.txt").readText())) }
     LaunchedEffect(isSample) {
-        maze.solve(pause.toLong())
+        withContext(Dispatchers.Default) {
+            maze.solve(pause.toLong())
+        }
     }
     Row(modifier = Modifier.fillMaxSize()) {
         Maze(maze, maze.cells, scale)
