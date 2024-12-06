@@ -1,5 +1,7 @@
 package day06chr
 
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,13 +12,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.singleWindowApplication
-import day06.Vec2
+import androidx.compose.ui.zIndex
+import day06pg.Vec2
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import java.io.File
 
@@ -67,14 +74,18 @@ class Maze(input: String) {
                 break
             }
             if (cells[next.first * width + next.second] == Cell.Obstruction) {
+                bumpFlow.emit(day06pg.Vec2(next.second, next.first))
                 direction = direction.turn()
                 next = direction.move(guard)
             }
             guard = next
+            cells[guard.first * width + guard.second] = Cell.Guard
             delay(pause)
         }
     }
 }
+
+val bumpFlow = MutableSharedFlow<Vec2>()
 
 @Composable
 fun Maze(maze: Maze, cells: SnapshotStateMap<Int, Cell>, scale: Float) {
@@ -85,16 +96,59 @@ fun Maze(maze: Maze, cells: SnapshotStateMap<Int, Cell>, scale: Float) {
             .verticalScroll(rememberScrollState())
             .semantics(mergeDescendants = true) {}) {
         for (i in 0 until maze.height) {
-            Row() {
+            Row(Modifier.zIndex(0f)) {
                 for (j in 0 until maze.width) {
-                    Text(
-                        cells[j + i * maze.width]!!.presentation,
-                        modifier = Modifier.size(scale.dp).clearAndSetSemantics { },
-                        fontSize = scale.sp
-                    )
+                    SingleCell(cells, j, i, maze, scale)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SingleCell(
+    cells: SnapshotStateMap<Int, Cell>,
+    j: Int, // y
+    i: Int, // x
+    maze: Maze,
+    scale: Float,
+) {
+    val bumpScale = remember { androidx.compose.animation.core.Animatable(1f) }
+    LaunchedEffect(Unit) {
+        bumpFlow.filter { (x, y) ->
+            y == i && x == j
+        }.collect { value ->
+            bumpScale.animateTo(1.5f, tween(durationMillis = 500))
+            bumpScale.animateTo(1f, tween(durationMillis = 1000))
+        }
+    }
+
+    val cell = cells[j + i * maze.width]!!
+    val color = when (cell) {
+        Cell.Guard -> Color.Red
+        Cell.Obstruction -> Color.Black
+        Cell.Empty -> Color.White
+        Cell.Visited -> Color.Black.copy(0.05f)
+    }
+
+    val zIndex = if(bumpScale.value > 1.00f) {
+        1f
+    } else {
+        0f
+    }
+    val coolC = if(bumpScale.value > 1.1f) {
+        Color(0xFFffa500)
+    } else {
+        color
+    }
+    Box(
+        modifier = Modifier.graphicsLayer {
+            this.transformOrigin = TransformOrigin.Center
+            this.scaleX = bumpScale.value
+            this.scaleY = bumpScale.value
+            this.clip = false
+        }.size(scale.dp).background(coolC).clearAndSetSemantics { }.zIndex(zIndex),
+    ) {
     }
 }
 
@@ -155,7 +209,7 @@ fun Day6() {
 
 fun main() {
     singleWindowApplication(
-        title = "Day 4",
+        title = "Day 6",
         alwaysOnTop = true
     ) {
         DevelopmentEntryPoint {
