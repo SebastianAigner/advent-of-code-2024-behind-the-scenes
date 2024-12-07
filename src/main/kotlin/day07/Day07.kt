@@ -80,8 +80,6 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                     op /= 3
                 }
                 op %= 3
-                val digits = log10(b.toDouble())
-                val leftShift = 10.0.pow(digits)
                 when (op) {
                     0 -> calcRes = a + b
                     1 -> calcRes = a * b
