@@ -1,7 +1,12 @@
 package day07
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import kotlin.math.pow
+import kotlin.time.measureTimedValue
 
 val input = File("input/day07.txt")
 
@@ -13,62 +18,53 @@ data class Calibration(val result: Long, val operands: List<Long>) {
         // and then, we iterate over those.
         val operandSlots = operands.size - 1
         val possibleCombos = 2.0.pow(operandSlots.toDouble()).toInt()
-        //println("possible $possibleCombos")
-        for(operatorCombination in 0..<possibleCombos) {
-            //println("trying $operatorCombination com")
+        for (operatorCombination in 0..<possibleCombos) {
             var calcRes = operands[0]
-            for(index in 0..<operands.lastIndex) {
+            for (index in 0..<operands.lastIndex) {
                 // excludes last index
                 val a = calcRes
-                val b = operands[index+1]
+                val b = operands[index + 1]
                 val op = (operatorCombination shr index) and 0x1
-                if(op == 0) {
-                    calcRes = a + b
-                } else {
-                    calcRes = a * b
+                when (op) {
+                    0 -> calcRes = a + b
+                    1 -> calcRes = a * b
                 }
             }
-            if(calcRes == result) return true
+            if (calcRes == result) return true
         }
         return false
     }
 
 
-
     fun isValid2(): Boolean {
-        // essentially, we generate a binary number that indicates
+        // essentially, we generate a ternary number that indicates
         // 0: plus
         // 1: times
+        // 2: concat
         // and then, we iterate over those.
         val operandSlots = operands.size - 1
         val possibleCombos = 3.0.pow(operandSlots.toDouble()).toInt()
-        //println("possible $possibleCombos")
-        for(operatorCombination in 0..<possibleCombos) {
-            //println("trying $operatorCombination com")
+        for (operatorCombination in 0..<possibleCombos) {
             var calcRes = operands[0]
-            for(index in 0..<operands.lastIndex) {
+            for (index in 0..<operands.lastIndex) {
                 // excludes last index
                 val a = calcRes
-                val b = operands[index+1]
+                val b = operands[index + 1]
                 val opstr = operatorCombination.toString(3)
-                val op = opstr.getOrNull(opstr.lastIndex-index) ?: '0'
+                val op = opstr.getOrNull(opstr.lastIndex - index) ?: '0'
                 when (op) {
-                    '0' -> {
-                        calcRes = a + b
-                    }
-                    '1' -> {
-                        calcRes = a * b
-                    }
-                    '2' -> {
-                        calcRes = (a.toString() + b.toString()).toLong()
-                    }
+                    '0' -> calcRes = a + b
+                    '1' -> calcRes = a * b
+                    '2' -> calcRes = (a.toString() + b.toString()).toLong()
                 }
             }
-            if(calcRes == result) return true
+            if (calcRes == result) return true
         }
         return false
     }
 }
+
+// one more version that replaces the string-based shift-right by repeatedly dividing by three instead!
 
 fun main() {
     val lines = input.readLines()
@@ -76,16 +72,39 @@ fun main() {
         val (res, ops) = line.split(": ")
         Calibration(res.toLong(), ops.split(" ").map { num -> num.toLong() })
     }
-//    println(calibs.maxOf { calibration -> calibration.operands.size }) // 12 for my input; 2^12 and 4^12 (16,777,216) seems doable.
-    calibs.filter { calibration ->
-        calibration.isValid()
-    }.sumOf { calibration ->
-        calibration.result
-    }.also(::println)
+    print("Maximum number of observed operands: ")
+    println(calibs.maxOf { calibration -> calibration.operands.size }) // 12 for my input; 2^12 and 4^12 (16,777,216) seems doable.
+    print("Has zero as operand: ")
+    println(calibs.flatMap { calibration -> calibration.operands }.any { lng -> lng == 0L })
+    print("Has negative as operand: ")
+    println(calibs.flatMap { calibration -> calibration.operands }.any { lng -> lng < 0L })
+    val partA = measureTimedValue { part1(calibs) }
+    println(partA)
+    check(partA.value == 14711933466277)
 
-    calibs.filter { calibration ->
-        calibration.isValid2()
-    }.sumOf { calibration ->
-        calibration.result
-    }.also(::println)
+    val partB = measureTimedValue { part2(calibs) }
+
+    println(partB)
+    check(partB.value == 286580387663654)
 }
+
+private fun part1(calibs: List<Calibration>): Long = calibs.filter { calibration ->
+    calibration.isValid()
+}.sumOf { calibration ->
+    calibration.result
+}
+
+private fun part2(calibs: List<Calibration>): Long = runBlocking(Dispatchers.Default) {
+    calibs
+        .map { calibration ->
+            async {
+                if (calibration.isValid2()) calibration.result else 0
+            }
+        }
+        .awaitAll()
+        .sum()
+}
+
+// baseline:
+// TimedValue(value=14711933466277, duration=13.555125ms)
+// TimedValue(value=286580387663654, duration=6.057535792s)
