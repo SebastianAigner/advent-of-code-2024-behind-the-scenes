@@ -62,6 +62,37 @@ data class Calibration(val result: Long, val operands: List<Long>) {
         }
         return false
     }
+
+    fun isValid2Stringless(): Boolean {
+        // essentially, we generate a ternary number that indicates
+        // 0: plus
+        // 1: times
+        // 2: concat
+        // and then, we iterate over those.
+        val operandSlots = operands.size - 1
+        val possibleCombos = 3.0.pow(operandSlots.toDouble()).toInt()
+        for (operatorCombination in 0..<possibleCombos) {
+            var calcRes = operands[0]
+            for (index in 0..<operands.lastIndex) {
+                // excludes last index
+                val a = calcRes
+                val b = operands[index + 1]
+                // val divideBy = Math.pow(3.0, index.toDouble())
+                var op = operatorCombination // / divideBy
+                repeat(index) {
+                    op /= 3
+                }
+                op %= 3
+                when (op) {
+                    0 -> calcRes = a + b
+                    1 -> calcRes = a * b
+                    2 -> calcRes = (a.toString() + b.toString()).toLong()
+                }
+            }
+            if (calcRes == result) return true
+        }
+        return false
+    }
 }
 
 // one more version that replaces the string-based shift-right by repeatedly dividing by three instead!
@@ -98,7 +129,7 @@ private fun part2(calibs: List<Calibration>): Long = runBlocking(Dispatchers.Def
     calibs
         .map { calibration ->
             async {
-                if (calibration.isValid2()) calibration.result else 0
+                if (calibration.isValid2Stringless()) calibration.result else 0
             }
         }
         .awaitAll()
