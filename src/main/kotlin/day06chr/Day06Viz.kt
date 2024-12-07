@@ -118,16 +118,16 @@ private fun SingleCell(
     scale: Float,
 ) {
     val bumpScale = remember { androidx.compose.animation.core.Animatable(1f) }
-    LaunchedEffect(Unit) {
-        bumpFlow.filter { (x, y) ->
-            y == i && x == j
-        }.collect { value ->
-            launch {
-                bumpScale.animateTo(1.5f, tween(durationMillis = 500))
-                bumpScale.animateTo(1f, tween(durationMillis = 1000))
-            }
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        bumpFlow.filter { (x, y) ->
+//            y == i && x == j
+//        }.collect { value ->
+//            launch {
+//                bumpScale.animateTo(1.5f, tween(durationMillis = 500))
+//                bumpScale.animateTo(1f, tween(durationMillis = 1000))
+//            }
+//        }
+//    }
 
     val cell = cells[j + i * maze.width]!!
     val color = when (cell) {
@@ -148,12 +148,15 @@ private fun SingleCell(
         color
     }
     Box(
-        modifier = Modifier.graphicsLayer {
-            this.transformOrigin = TransformOrigin.Center
-            this.scaleX = bumpScale.value
-            this.scaleY = bumpScale.value
-            this.clip = false
-        }.padding(scale.dp / 6).size(scale.dp).background(coolC).clearAndSetSemantics { }
+        modifier = Modifier
+//            .graphicsLayer {
+//                this.transformOrigin = TransformOrigin.Center
+//                this.scaleX = bumpScale.value
+//                this.scaleY = bumpScale.value
+//                this.clip = false
+//            }
+            .padding(scale.dp / 6)
+            .size(scale.dp).background(coolC).clearAndSetSemantics { }
             .then(if (bumpScale.value > 1.0f) Modifier.zIndex(1.0f) else Modifier),
     ) {
     }

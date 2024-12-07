@@ -59,7 +59,7 @@ private fun part1(lines: List<List<Char>>) {
 }
 
 private fun part2(lines: List<List<Char>>) {
-    var cnt = AtomicInteger(0)
+    val cnt = AtomicInteger(0)
     runBlocking(Dispatchers.Default) {
         for (obsY in lines.indices) {
             for (obsX in lines[0].indices) {
@@ -85,7 +85,6 @@ fun simulatePlacedObstruction(lines: List<List<Char>>, obsX: Int, obsY: Int): Re
     workingCopy[obsY][obsX] = '#' // no need for 'O'.
     return simulateGuardPath(workingCopy)
 }
-
 
 
 fun getGuardStartingPosition(lines: List<List<Char>>): Vec2 {
@@ -118,9 +117,11 @@ private fun simulateGuardPath(lines: List<List<Char>>): Result<List<GuardWalkRec
                 }
                 visited += currentGuardRecord
             }
+
             '#' -> {
                 currentGuardRecord = currentGuardRecord.turnRight()
             }
+
             '?' -> {
                 break
             }

@@ -12,10 +12,10 @@ fun main() {
     val width = input[0].length
 
     val dirs = listOf(
-        0 to -1,
-        1 to 0,
-        0 to 1,
-        -1 to 0,
+        0 to -1, // up
+        1 to 0, // right
+        0 to 1, // down
+        -1 to 0, // left
     )
     var dir = dirs[0]
 

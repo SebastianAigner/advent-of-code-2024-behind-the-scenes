@@ -1,6 +1,11 @@
-package day06marton
-
-import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.lang.Exception
+import java.text.ParsePosition
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.system.measureTimeMillis
 
 data class Position(val x: Int, val y: Int)
 
@@ -71,31 +76,38 @@ fun part2(
     obstacles: Set<Position>,
     initialPos: Position,
 ): Int {
-    var looped = 0
-    for (testX in 0..<width) {
-        for (testY in 0..<height) {
-            val visited = mutableSetOf<State>()
-            runGuard(
-                width = width,
-                height = height,
-                obstacles = obstacles + Position(testX, testY),
-                initialPos = initialPos,
-                onNewPositionVisited = { pos, dir ->
-                    val state = State(pos, dir)
-                    if (state in visited) {
-                        looped++
-                        continue
+    var looped = AtomicInteger(0)
+    runBlocking(Dispatchers.Default) {
+        for (testX in 0..<width) {
+            for (testY in 0..<height) {
+                launch {
+                    try {
+                        var visited = mutableSetOf<State>()
+                        runGuard(
+                            width = width,
+                            height = height,
+                            obstacles = obstacles + Position(testX, testY),
+                            initialPos = initialPos,
+                            onNewPositionVisited = { pos, dir ->
+                                val state = State(pos, dir)
+                                if (state in visited) {
+                                    looped.andIncrement
+                                    throw IllegalStateException()
+                                }
+                                visited += state
+                            },
+                        )
+                    } catch (e: Exception) {
                     }
-                    visited += state
-                },
-            )
+                }
+            }
         }
     }
-    return looped
+    return looped.get()
 }
 
 fun main() {
-    val input = File("input/day06.txt").readLines()
+    val input = readInput("Day06")
 
     val obstacles = mutableSetOf<Position>()
     lateinit var initialPos: Position
@@ -122,12 +134,15 @@ fun main() {
     check(result1 == 5534)
     println(result1) // 5534
 
-    val result2 = part2(
-        width,
-        height,
-        obstacles,
-        initialPos,
-    )
-    check(result2 == 2262)
+    val result2 =
+        measureTimeMillis {
+            part2(
+                width,
+                height,
+                obstacles,
+                initialPos,
+            )
+        }
     println(result2) // 2262
+//    check(result2 == 2262)
 }
