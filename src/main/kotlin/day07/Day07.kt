@@ -13,9 +13,9 @@ data class Calibration(val result: Long, val operands: List<Long>) {
         // and then, we iterate over those.
         val operandSlots = operands.size - 1
         val possibleCombos = 2.0.pow(operandSlots.toDouble()).toInt()
-        println("possible $possibleCombos")
+        //println("possible $possibleCombos")
         for(operatorCombination in 0..<possibleCombos) {
-            println("trying $operatorCombination com")
+            //println("trying $operatorCombination com")
             var calcRes = operands[0]
             for(index in 0..<operands.lastIndex) {
                 // excludes last index
@@ -32,6 +32,39 @@ data class Calibration(val result: Long, val operands: List<Long>) {
         }
         return false
     }
+
+
+
+    fun isValid2(): Boolean {
+        // essentially, we generate a binary number that indicates
+        // 0: plus
+        // 1: times
+        // and then, we iterate over those.
+        val operandSlots = operands.size - 1
+        val possibleCombos = 2.0.pow(operandSlots.toDouble()).toInt()
+        //println("possible $possibleCombos")
+        for(operatorCombination in 0..<possibleCombos) {
+            //println("trying $operatorCombination com")
+            var calcRes = operands[0]
+            for(index in 0..<operands.lastIndex) {
+                // excludes last index
+                val a = calcRes
+                val b = operands[index+1]
+                val opstr = operatorCombination.toString(2)
+                val op = opstr.getOrNull(opstr.lastIndex-index) ?: '0'
+                when (op) {
+                    '0' -> {
+                        calcRes = a + b
+                    }
+                    '1' -> {
+                        calcRes = a * b
+                    }
+                }
+            }
+            if(calcRes == result) return true
+        }
+        return false
+    }
 }
 
 fun main() {
@@ -40,9 +73,15 @@ fun main() {
         val (res, ops) = line.split(": ")
         Calibration(res.toLong(), ops.split(" ").map { num -> num.toLong() })
     }
-//    println(calibs.maxOf { calibration -> calibration.operands.size }) // 12 for my input; 2^12 and 4^12 (16777216) seems doable.
+//    println(calibs.maxOf { calibration -> calibration.operands.size }) // 12 for my input; 2^12 and 4^12 (16,777,216) seems doable.
     calibs.filter { calibration ->
         calibration.isValid()
+    }.sumOf { calibration ->
+        calibration.result
+    }.also(::println)
+
+    calibs.filter { calibration ->
+        calibration.isValid2()
     }.sumOf { calibration ->
         calibration.result
     }.also(::println)
