@@ -41,7 +41,7 @@ data class Calibration(val result: Long, val operands: List<Long>) {
         // 1: times
         // and then, we iterate over those.
         val operandSlots = operands.size - 1
-        val possibleCombos = 2.0.pow(operandSlots.toDouble()).toInt()
+        val possibleCombos = 3.0.pow(operandSlots.toDouble()).toInt()
         //println("possible $possibleCombos")
         for(operatorCombination in 0..<possibleCombos) {
             //println("trying $operatorCombination com")
@@ -50,7 +50,7 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                 // excludes last index
                 val a = calcRes
                 val b = operands[index+1]
-                val opstr = operatorCombination.toString(2)
+                val opstr = operatorCombination.toString(3)
                 val op = opstr.getOrNull(opstr.lastIndex-index) ?: '0'
                 when (op) {
                     '0' -> {
@@ -58,6 +58,9 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                     }
                     '1' -> {
                         calcRes = a * b
+                    }
+                    '2' -> {
+                        calcRes = (a.toString() + b.toString()).toLong()
                     }
                 }
             }
