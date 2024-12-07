@@ -1,5 +1,9 @@
 package day07
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import kotlin.math.log10
 import kotlin.math.pow
@@ -19,12 +23,11 @@ data class Calibration(val result: Long, val operands: List<Long>) {
             var calcRes = operands[0]
             for (index in 0..<operands.lastIndex) {
                 // excludes last index
-                val a = calcRes
                 val b = operands[index + 1]
                 val op = (operatorCombination shr index) and 0x1
                 when (op) {
-                    0 -> calcRes = a + b
-                    1 -> calcRes = a * b
+                    0 -> calcRes = calcRes + b
+                    1 -> calcRes = calcRes * b
                 }
 //              if(calcRes > result) break
             }
@@ -33,6 +36,7 @@ data class Calibration(val result: Long, val operands: List<Long>) {
         return false
     }
 
+    // ...shorter?
 
     fun isValid2(): Boolean {
         // essentially, we generate a ternary number that indicates
@@ -46,14 +50,13 @@ data class Calibration(val result: Long, val operands: List<Long>) {
             var calcRes = operands[0]
             for (index in 0..<operands.lastIndex) {
                 // excludes last index
-                val a = calcRes
                 val b = operands[index + 1]
                 val opstr = operatorCombination.toString(3)
                 val op = opstr.getOrNull(opstr.lastIndex - index) ?: '0'
                 when (op) {
-                    '0' -> calcRes = a + b
-                    '1' -> calcRes = a * b
-                    '2' -> calcRes = (a.toString() + b.toString()).toLong()
+                    '0' -> calcRes = calcRes + b
+                    '1' -> calcRes = calcRes * b
+                    '2' -> calcRes = (calcRes.toString() + b.toString()).toLong()
                 }
             }
             if (calcRes == result) return true
@@ -73,7 +76,6 @@ data class Calibration(val result: Long, val operands: List<Long>) {
             var calcRes = operands[0]
             for (index in 0..<operands.lastIndex) {
                 // excludes last index
-                val a = calcRes
                 val b = operands[index + 1]
                 // val divideBy = Math.pow(3.0, index.toDouble())
                 var op = operatorCombination // / divideBy
@@ -82,9 +84,9 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                 }
                 op %= 3
                 when (op) {
-                    0 -> calcRes = a + b
-                    1 -> calcRes = a * b
-                    2 -> calcRes = (a.toString() + b.toString()).toLong()
+                    0 -> calcRes = calcRes + b
+                    1 -> calcRes = calcRes * b
+                    2 -> calcRes = (calcRes.toString() + b.toString()).toLong()
                 }
             }
             if (calcRes == result) return true
@@ -104,7 +106,6 @@ data class Calibration(val result: Long, val operands: List<Long>) {
             var calcRes = operands[0]
             for (index in 0..<operands.lastIndex) {
                 // excludes last index
-                val a = calcRes
                 val b = operands[index + 1]
                 // val divideBy = Math.pow(3.0, index.toDouble())
                 var op = operatorCombination // / divideBy
@@ -114,11 +115,11 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                 op %= 3
 
                 when (op) {
-                    0 -> calcRes = a + b
-                    1 -> calcRes = a * b
+                    0 -> calcRes = calcRes + b
+                    1 -> calcRes = calcRes * b
                     2 -> {
                         val digits = log10(b.toDouble()).toInt() + 1
-                        val concat = (10.0.pow(digits)).toInt() * a + b
+                        val concat = (10.0.pow(digits)).toInt() * calcRes + b
                         calcRes = concat
                     }
                 }
@@ -161,22 +162,22 @@ private fun part1(calibs: List<Calibration>): Long = calibs.filter { calibration
 }
 
 private fun part2(calibs: List<Calibration>): Long {
-    return calibs.filter { calibration ->
-        calibration.isValid2TotallyStringless()
-    }.sumOf { calibration ->
-        calibration.result
-    }
-
-//    return runBlocking(Dispatchers.Default) {
-//        calibs
-//            .map { calibration ->
-//                async {
-//                    if (calibration.isValid2TotallyStringless()) calibration.result else 0
-//                }
-//            }
-//            .awaitAll()
-//            .sum()
+//    return calibs.filter { calibration ->
+//        calibration.isValid2TotallyStringless()
+//    }.sumOf { calibration ->
+//        calibration.result
 //    }
+
+    return runBlocking(Dispatchers.Default) {
+        calibs
+            .map { calibration ->
+                async {
+                    if (calibration.isValid2TotallyStringless()) calibration.result else 0
+                }
+            }
+            .awaitAll()
+            .sum()
+    }
 }
 
 // baseline:
@@ -188,3 +189,6 @@ private fun part2(calibs: List<Calibration>): Long {
 
 // totallystringless+early-exit:
 // TimedValue(value=286580387663654, duration=3.658599792s)
+
+// totallystringless+early-exit+coroutines:
+// TimedValue(value=286580387663654, duration=502.629250ms)
