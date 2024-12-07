@@ -1,10 +1,7 @@
 package day07
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import java.io.File
+import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.time.measureTimedValue
 
@@ -83,10 +80,48 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                     op /= 3
                 }
                 op %= 3
+                val digits = log10(b.toDouble())
+                val leftShift = 10.0.pow(digits)
                 when (op) {
                     0 -> calcRes = a + b
                     1 -> calcRes = a * b
                     2 -> calcRes = (a.toString() + b.toString()).toLong()
+                }
+            }
+            if (calcRes == result) return true
+        }
+        return false
+    }
+
+    fun isValid2TotallyStringless(): Boolean {
+        // essentially, we generate a ternary number that indicates
+        // 0: plus
+        // 1: times
+        // 2: concat
+        // and then, we iterate over those.
+        val operandSlots = operands.size - 1
+        val possibleCombos = 3.0.pow(operandSlots.toDouble()).toInt()
+        for (operatorCombination in 0..<possibleCombos) {
+            var calcRes = operands[0]
+            for (index in 0..<operands.lastIndex) {
+                // excludes last index
+                val a = calcRes
+                val b = operands[index + 1]
+                // val divideBy = Math.pow(3.0, index.toDouble())
+                var op = operatorCombination // / divideBy
+                repeat(index) {
+                    op /= 3
+                }
+                op %= 3
+
+                when (op) {
+                    0 -> calcRes = a + b
+                    1 -> calcRes = a * b
+                    2 -> {
+                        val digits = log10(b.toDouble()).toInt() + 1
+                        val concat = (10.0.pow(digits)).toInt() * a + b
+                        calcRes = concat
+                    }
                 }
             }
             if (calcRes == result) return true
@@ -125,17 +160,28 @@ private fun part1(calibs: List<Calibration>): Long = calibs.filter { calibration
     calibration.result
 }
 
-private fun part2(calibs: List<Calibration>): Long = runBlocking(Dispatchers.Default) {
-    calibs
-        .map { calibration ->
-            async {
-                if (calibration.isValid2Stringless()) calibration.result else 0
-            }
-        }
-        .awaitAll()
-        .sum()
+private fun part2(calibs: List<Calibration>): Long {
+    return calibs.filter { calibration ->
+        calibration.isValid2TotallyStringless()
+    }.sumOf { calibration ->
+        calibration.result
+    }
+
+//    return runBlocking(Dispatchers.Default) {
+//        calibs
+//            .map { calibration ->
+//                async {
+//                    if (calibration.isValid2TotallyStringless()) calibration.result else 0
+//                }
+//            }
+//            .awaitAll()
+//            .sum()
+//    }
 }
 
 // baseline:
 // TimedValue(value=14711933466277, duration=13.555125ms)
 // TimedValue(value=286580387663654, duration=6.057535792s)
+
+// totallystringless (p2):
+// TimedValue(value=286580387663654, duration=4.195472541s)
