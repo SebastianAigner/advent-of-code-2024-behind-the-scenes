@@ -26,6 +26,7 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                     0 -> calcRes = a + b
                     1 -> calcRes = a * b
                 }
+//              if(calcRes > result) break
             }
             if (calcRes == result) return true
         }
@@ -121,6 +122,7 @@ data class Calibration(val result: Long, val operands: List<Long>) {
                         calcRes = concat
                     }
                 }
+                if (calcRes > result) break
             }
             if (calcRes == result) return true
         }
@@ -183,3 +185,6 @@ private fun part2(calibs: List<Calibration>): Long {
 
 // totallystringless (p2):
 // TimedValue(value=286580387663654, duration=4.195472541s)
+
+// totallystringless+early-exit:
+// TimedValue(value=286580387663654, duration=3.658599792s)
