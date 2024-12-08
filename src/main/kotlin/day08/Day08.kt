@@ -58,12 +58,11 @@ fun part1(
         for (first in kin) {
             for (second in kin) {
                 if (first == second) continue
-                // compute vector between antinode locations
                 val distanceVec = second - first
                 val relDistVec = distanceVec * 2
                 val absAntiNodeVec = first + relDistVec
                 if (absAntiNodeVec.isInBounds()) {
-                    // MAKE SURE YOU ONLY COUNT wHATS IN THE MAP
+                    // MAKE SURE YOU ONLY COUNT WHATS IN THE MAP
                     antiNodeLocations += absAntiNodeVec
                 }
             }
@@ -84,22 +83,20 @@ private fun part2(
                 if (first == second) continue
                 val distanceVec = second - first
                 val relDistVec = distanceVec
-                var absAntiNodeVec: Vec2 = first
+                var positiveNextLocation: Vec2 = first
                 do {
-                    absAntiNodeVec = absAntiNodeVec + relDistVec
-                    if (absAntiNodeVec.isInBounds()) {
-                        // MAKE SURE YOU ONLY COUNT wHATS IN THE MAP
-                        antiNodeLocations += absAntiNodeVec
+                    positiveNextLocation = positiveNextLocation + relDistVec
+                    if (positiveNextLocation.isInBounds()) {
+                        antiNodeLocations += positiveNextLocation
                     }
-                } while (absAntiNodeVec.isInBounds())
-                var absAntiNodeVec2: Vec2 = first
+                } while (positiveNextLocation.isInBounds())
+                var negativeNextLocation: Vec2 = first
                 do {
-                    absAntiNodeVec2 = absAntiNodeVec2 - relDistVec
-                    if (absAntiNodeVec2.isInBounds()) {
-                        // MAKE SURE YOU ONLY COUNT wHATS IN THE MAP
-                        antiNodeLocations += absAntiNodeVec2
+                    negativeNextLocation = negativeNextLocation - relDistVec
+                    if (negativeNextLocation.isInBounds()) {
+                        antiNodeLocations += negativeNextLocation
                     }
-                } while (absAntiNodeVec.isInBounds())
+                } while (positiveNextLocation.isInBounds())
             }
         }
     }
