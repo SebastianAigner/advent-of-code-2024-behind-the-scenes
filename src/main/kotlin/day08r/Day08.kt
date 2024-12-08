@@ -1,4 +1,6 @@
-package day08
+@file:Suppress("DuplicatedCode")
+
+package day08r
 
 import java.io.File
 import kotlin.time.measureTimedValue
@@ -13,77 +15,71 @@ data class Vec2(val x: Int, val y: Int) {
 
 fun main() {
     val lines = input.readLines()
-    val mapYs = lines.indices
-    val mapXs = lines[0].indices
+    val mapYRange = lines.indices
+    val mapXRange = lines[0].indices
     val typeToPosition = createLookup(lines)
     val antiNodeLocations1 = measureTimedValue {
         part1(
             typeToPosition = typeToPosition
         ) {
-            x in mapXs && y in mapYs
+            x in mapXRange && y in mapYRange
         }
     }
     val antiNodeLocations2 = measureTimedValue {
         part2(
             typeToPosition = typeToPosition
         ) {
-            x in mapXs && y in mapYs
+            x in mapXRange && y in mapYRange
         }
     }
     println("${antiNodeLocations1.value.size} in ${antiNodeLocations1.duration}")
     println("${antiNodeLocations2.value.size} in ${antiNodeLocations2.duration}")
-    // JIT?
 }
 
-fun List<String>.getChr(x: Int, y: Int) = this[y][x]
+fun List<String>.getCharacter(x: Int, y: Int) = this[y][x]
 
-private fun createLookup(lines: List<String>): Map<Char, Set<Vec2>> {
-    val typeToPosition = mutableMapOf<Char, MutableSet<Vec2>>()
+private fun createLookup(lines: List<String>): Map<Char, Set<Vec2>> = buildMap<Char, MutableSet<Vec2>> {
     for (y in lines.indices) {
         for (x in lines[0].indices) {
-            val chr = lines.getChr(x, y)
+            val chr = lines.getCharacter(x, y)
             if (chr == '.') {
                 continue
             }
-            val ttpEntry = typeToPosition.getOrElse(chr) { mutableSetOf() }
+            val ttpEntry = this.getOrElse(chr) { mutableSetOf() }
             ttpEntry.add(Vec2(x, y))
-            typeToPosition.put(chr, ttpEntry)
+            this.put(chr, ttpEntry)
         }
     }
-    return typeToPosition
 }
 
 
 fun part1(
     typeToPosition: Map<Char, Set<Vec2>>,
     isInBounds: Vec2.() -> Boolean,
-): MutableSet<Vec2> {
-    val antiNodeLocations = mutableSetOf<Vec2>()
-    for (type in typeToPosition.keys) {
-        for (first in typeToPosition[type]!!) {
-            for (second in typeToPosition[type]!!) {
+): Set<Vec2> = buildSet {
+    for (antennaType in typeToPosition.keys) {
+        for (first in typeToPosition[antennaType]!!) {
+            for (second in typeToPosition[antennaType]!!) {
                 if (first == second) continue
                 val distanceVec = second - first
                 val relDistVec = distanceVec * 2
                 val absAntiNodeVec = first + relDistVec
                 if (absAntiNodeVec.isInBounds()) {
                     // MAKE SURE YOU ONLY COUNT WHATS IN THE MAP
-                    antiNodeLocations += absAntiNodeVec
+                    add(absAntiNodeVec)
                 }
             }
         }
     }
-    return antiNodeLocations
 }
 
 private fun part2(
     typeToPosition: Map<Char, Set<Vec2>>,
     isInBounds: Vec2.() -> Boolean,
-): Set<Vec2> {
-    val antiNodeLocations = mutableSetOf<Vec2>()
-    for (type in typeToPosition.keys) {
-        for (first in typeToPosition[type]!!) {
-            for (second in typeToPosition[type]!!) {
+): Set<Vec2> = buildSet {
+    for (antennaType in typeToPosition.keys) {
+        for (first in typeToPosition[antennaType]!!) {
+            for (second in typeToPosition[antennaType]!!) {
                 if (first == second) continue
                 val distanceVec = second - first
                 val relDistVec = distanceVec
@@ -91,18 +87,17 @@ private fun part2(
                 do {
                     positiveNextLocation = positiveNextLocation + relDistVec
                     if (positiveNextLocation.isInBounds()) {
-                        antiNodeLocations += positiveNextLocation
+                        this.add(positiveNextLocation)
                     }
                 } while (positiveNextLocation.isInBounds())
                 var negativeNextLocation: Vec2 = first
                 do {
                     negativeNextLocation = negativeNextLocation - relDistVec
                     if (negativeNextLocation.isInBounds()) {
-                        antiNodeLocations += negativeNextLocation
+                        this.add(negativeNextLocation)
                     }
                 } while (positiveNextLocation.isInBounds())
             }
         }
     }
-    return antiNodeLocations
 }
