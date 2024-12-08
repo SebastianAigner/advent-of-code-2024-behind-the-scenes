@@ -31,6 +31,7 @@ fun main() {
         }
     }
     val antiNodeLocations = mutableSetOf<Vec2>()
+    fun Vec2.isInMap(): Boolean = x in mapXs && y in mapYs
     for (type in typeToPosition.keys) {
         println(type)
         val kin = typeToPosition[type]!!
@@ -41,12 +42,23 @@ fun main() {
                 // compute antinode locations
                 // distance between
                 val distanceVec = second - first
-                val relDistVec = distanceVec * 2
-                val absAntiNodeVec = first + relDistVec
-                if (absAntiNodeVec.x in mapXs && absAntiNodeVec.y in mapYs) {
-                    // MAKE SURE YOU ONLY COUNT wHATS IN THE MAP
-                    antiNodeLocations += absAntiNodeVec
-                }
+                val relDistVec = distanceVec
+                var absAntiNodeVec: Vec2 = first
+                do {
+                    absAntiNodeVec = absAntiNodeVec + relDistVec
+                    if (absAntiNodeVec.isInMap()) {
+                        // MAKE SURE YOU ONLY COUNT wHATS IN THE MAP
+                        antiNodeLocations += absAntiNodeVec
+                    }
+                } while (absAntiNodeVec.isInMap())
+                var absAntiNodeVec2: Vec2 = first
+                do {
+                    absAntiNodeVec2 = absAntiNodeVec2 - relDistVec
+                    if (absAntiNodeVec2.isInMap()) {
+                        // MAKE SURE YOU ONLY COUNT wHATS IN THE MAP
+                        antiNodeLocations += absAntiNodeVec2
+                    }
+                } while (absAntiNodeVec.isInMap())
             }
         }
     }
