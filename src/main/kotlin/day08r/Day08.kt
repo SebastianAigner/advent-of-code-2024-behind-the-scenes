@@ -18,6 +18,8 @@ fun main() {
     val mapYRange = lines.indices
     val mapXRange = lines[0].indices
     val typeToPosition = createLookup(lines)
+
+    repeat(100_000) {
     val antiNodeLocations1 = measureTimedValue {
         part1(
             typeToPosition = typeToPosition
@@ -34,6 +36,7 @@ fun main() {
     }
     println("${antiNodeLocations1.value.size} in ${antiNodeLocations1.duration}")
     println("${antiNodeLocations2.value.size} in ${antiNodeLocations2.duration}")
+    }
 }
 
 fun List<String>.getCharacter(x: Int, y: Int) = this[y][x]
@@ -47,7 +50,7 @@ private fun createLookup(lines: List<String>): Map<Char, Set<Vec2>> = buildMap<C
             }
             val ttpEntry = this.getOrElse(chr) { mutableSetOf() }
             ttpEntry.add(Vec2(x, y))
-            this.put(chr, ttpEntry)
+            this[chr] = ttpEntry
         }
     }
 }
