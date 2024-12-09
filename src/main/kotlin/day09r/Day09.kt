@@ -88,11 +88,13 @@ class BlockStorage() {
         for ((idx, block) in materialize().withIndex()) {
             if (block == -1) continue
             checkSum += idx * block
-            println(checkSum)
         }
         return checkSum
     }
 }
+
+// idea: instead of moving the last element to the first matching gap, find the first non-zero gap, walk backwards,
+// and see what file from the back you can move in there
 
 private fun part2(list: List<Segment>): Long {
     val blockStorage = BlockStorage()
@@ -109,22 +111,10 @@ private fun part2(list: List<Segment>): Long {
             if (potentialTarget >= idx) continue // could only move it further to the end
             blockStorage.moveSegmentIntoGap(idx, potentialTarget) // this should always succeed
             didMoveSuccessfully = true
-            println("successfully moved $segment from $idx to $potentialTarget")
             break
         }
         if (!didMoveSuccessfully) break
     }
-
-
-    val materialized = mutableListOf<Int>()
-    for (segment in blockStorage.storage) {
-        repeat(segment.len) {
-            materialized.add(segment.id)
-        }
-    }
-    println(materialized)
     return blockStorage.checksum()
 }
 
-// idea: instead of moving the last element to the first matching gap, find the first non-zero gap, walk backwards,
-// and see what file from the back you can move in there
