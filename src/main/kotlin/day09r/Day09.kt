@@ -92,18 +92,19 @@ class BlockStorage(list: List<Segment>) {
 
 private fun part2(list: List<Segment>): Long {
     val blockStorage = BlockStorage(list)
-    while (true) {
-        var didMoveSuccessfully = false
-        for ((idx, segment) in blockStorage.storage.withIndex().reversed()) { // this allocates :(
-            if (segment.isEmpty) continue // data segments only
-            // find a location to see if it's possible to move
-            val target = blockStorage.firstGapOfMinimumSize(n = segment.len, beforeIndex = idx) ?: continue
-            blockStorage.moveSegmentIntoGap(idx, target) // this should always succeed
-            didMoveSuccessfully = true
-            break
-        }
-        if (!didMoveSuccessfully) break
-    }
+    do {
+        val didMoveSuccessfully = attemptMove(blockStorage)
+    } while (didMoveSuccessfully)
     return blockStorage.checksum()
+}
+
+private fun attemptMove(blockStorage: BlockStorage): Boolean {
+    for ((idx, segment) in blockStorage.storage.withIndex().reversed()) { // this allocates :(
+        if (segment.isEmpty) continue // data segments only
+        val target = blockStorage.firstGapOfMinimumSize(n = segment.len, beforeIndex = idx) ?: continue
+        blockStorage.moveSegmentIntoGap(idx, target) // this should always succeed
+        return true
+    }
+    return false
 }
 
