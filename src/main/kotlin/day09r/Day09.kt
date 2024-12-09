@@ -20,10 +20,10 @@ fun main() {
         list += Segment(digit, id)
     }
     val a = part1(list)
-    val b = part2(list)
     check(a == 6421128769094L)
-    check(b == 6448168620520L)
     println(a)
+    val b = part2(list)
+    check(b == 6448168620520L)
     println(b)
 }
 
@@ -68,7 +68,9 @@ class BlockStorage(list: List<Segment>) {
         val newGapSegment = Segment(newGapLength, -1)
         storage[segmentIdx] = Segment(segment.len, -1)
         storage[gapIdx] = segment
-        storage.add(gapIdx + 1, newGapSegment)
+        if (newGapSegment.len > 0) {
+            storage.add(gapIdx + 1, newGapSegment)
+        }
     }
 
     fun materialize(): List<Int> {
@@ -95,8 +97,8 @@ private fun part2(list: List<Segment>): Long {
         for ((idx, segment) in blockStorage.storage.withIndex().reversed()) { // this allocates :(
             if (segment.isEmpty) continue // data segments only
             // find a location to see if it's possible to move
-            val potentialTarget = blockStorage.firstGapOfMinimumSize(n = segment.len, beforeIndex = idx) ?: continue
-            blockStorage.moveSegmentIntoGap(idx, potentialTarget) // this should always succeed
+            val target = blockStorage.firstGapOfMinimumSize(n = segment.len, beforeIndex = idx) ?: continue
+            blockStorage.moveSegmentIntoGap(idx, target) // this should always succeed
             didMoveSuccessfully = true
             break
         }
