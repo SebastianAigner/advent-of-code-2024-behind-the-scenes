@@ -6,11 +6,12 @@ import java.io.File
 
 val input = File("input/day09b.txt")
 
-data class Segment(val len: Int, val id: Int) // -1 == empty
+data class Segment(val len: Int, val id: Int) {
+    val isEmpty get() = id == -1
+}
 
 fun main() {
     val line = input.readLines().first()
-    println(line)
     val list = mutableListOf<Segment>()
     var cnt = 0
     for ((idx, char) in line.withIndex()) {
@@ -33,7 +34,6 @@ private fun part1(list: List<Segment>): Long {
             materialized.add(segment.id)
         }
     }
-    println(materialized)
     while (true) {
         val firstOpenSpace = materialized.indexOfFirst { i -> i == -1 }
         val lastUsedSpace = materialized.indexOfLast { i -> i != -1 }
@@ -43,24 +43,22 @@ private fun part1(list: List<Segment>): Long {
         materialized[firstOpenSpace] = materialized[lastUsedSpace]
         materialized[lastUsedSpace] = -1
     }
-    println(materialized)
     var checkSum = 0L
     for ((idx, block) in materialized.withIndex()) {
         if (block == -1) continue
         checkSum += idx * block
-        println(checkSum)
     }
     return checkSum
 }
 
-class BlockStorage() {
-    val storage = mutableListOf<Segment>()
-    fun addSegment(segment: Segment) {
-        storage += segment
-    }
+class BlockStorage(list: List<Segment>) {
+    val storage = list.toMutableList()
 
-    fun firstGapOfMinimumSize(n: Int): Int {
-        return storage.indexOfFirst { segment -> segment.id == -1 && segment.len >= n }
+    fun firstGapOfMinimumSize(n: Int, beforeIndex: Int): Int? {
+        val index = storage.indexOfFirst { segment -> segment.id == -1 && segment.len >= n }
+        if (index >= beforeIndex) return null
+        if (index == -1) return null
+        return index
     }
 
     fun moveSegmentIntoGap(segmentIdx: Int, gapIdx: Int) {
@@ -74,22 +72,16 @@ class BlockStorage() {
     }
 
     fun materialize(): List<Int> {
-        val materialized = mutableListOf<Int>()
-        for (segment in storage) {
-            repeat(segment.len) {
-                materialized.add(segment.id)
-            }
+        return storage.flatMap { segment ->
+            List(segment.len) { segment.id }
         }
-        return materialized
     }
 
     fun checksum(): Long {
-        var checkSum = 0L
-        for ((idx, block) in materialize().withIndex()) {
-            if (block == -1) continue
-            checkSum += idx * block
-        }
-        return checkSum
+        return materialize()
+            .withIndex()
+            .filter { (_, block) -> block != -1 }
+            .sumOf { (idx, block) -> idx.toLong() * block }
     }
 }
 
@@ -97,18 +89,13 @@ class BlockStorage() {
 // and see what file from the back you can move in there
 
 private fun part2(list: List<Segment>): Long {
-    val blockStorage = BlockStorage()
-    for (segment in list) {
-        blockStorage.addSegment(segment)
-    }
+    val blockStorage = BlockStorage(list)
     while (true) {
         var didMoveSuccessfully = false
-        for ((idx, segment) in blockStorage.storage.withIndex().reversed()) {
-            if (segment.id == -1) continue // data segments only
+        for ((idx, segment) in blockStorage.storage.withIndex().reversed()) { // this allocates :(
+            if (segment.isEmpty) continue // data segments only
             // find a location to see if it's possible to move
-            val potentialTarget = blockStorage.firstGapOfMinimumSize(segment.len)
-            if (potentialTarget == -1) continue // can't move this data segment
-            if (potentialTarget >= idx) continue // could only move it further to the end
+            val potentialTarget = blockStorage.firstGapOfMinimumSize(n = segment.len, beforeIndex = idx) ?: continue
             blockStorage.moveSegmentIntoGap(idx, potentialTarget) // this should always succeed
             didMoveSuccessfully = true
             break
