@@ -18,11 +18,15 @@ fun main() {
         val id = if (idx % 2 == 1) -1 else (cnt++)
         list += Segment(digit, id)
     }
-    part1(list)
-    part2(list)
+    val a = part1(list)
+    val b = part2(list)
+    check(a == 6421128769094L)
+    check(b == 6448168620520L)
+    println(a)
+    println(b)
 }
 
-private fun part1(list: List<Segment>) {
+private fun part1(list: List<Segment>): Long {
     val materialized = mutableListOf<Int>()
     for (segment in list) {
         repeat(segment.len) {
@@ -46,7 +50,7 @@ private fun part1(list: List<Segment>) {
         checkSum += idx * block
         println(checkSum)
     }
-    println(checkSum)
+    return checkSum
 }
 
 class BlockStorage() {
@@ -55,31 +59,8 @@ class BlockStorage() {
         storage += segment
     }
 
-    fun lastNonEmptySegment(): Int {
-        return storage.indexOfLast { segment -> segment.id != -1 }
-    }
-
-    fun lastNonEmptySegmentIndices() {
-
-    }
-
     fun firstGapOfMinimumSize(n: Int): Int {
         return storage.indexOfFirst { segment -> segment.id == -1 && segment.len >= n }
-    }
-
-    fun firstNonZeroGap(indexSkipList: MutableList<Int>): Int {
-        for (i in storage.indices) {
-            if (i in indexSkipList) continue
-            val seg = getSeg(i)
-            if (seg.id == -1 && seg.len >= 0) {
-                return i
-            }
-        }
-        return error("there should always be a gap (even if at the very end)")
-    }
-
-    fun lastSegmentOfMaximumSize(n: Int): Int {
-        return storage.indexOfLast { segment -> segment.id != -1 && segment.len <= n }
     }
 
     fun moveSegmentIntoGap(segmentIdx: Int, gapIdx: Int) {
@@ -91,8 +72,6 @@ class BlockStorage() {
         storage[gapIdx] = segment
         storage.add(gapIdx + 1, newGapSegment)
     }
-
-    fun getSeg(idx: Int) = storage[idx]
 
     fun materialize(): List<Int> {
         val materialized = mutableListOf<Int>()
@@ -115,8 +94,7 @@ class BlockStorage() {
     }
 }
 
-private fun part2(list: List<Segment>) {
-    println("enterping part 2")
+private fun part2(list: List<Segment>): Long {
     val blockStorage = BlockStorage()
     for (segment in list) {
         blockStorage.addSegment(segment)
@@ -145,7 +123,7 @@ private fun part2(list: List<Segment>) {
         }
     }
     println(materialized)
-    println(blockStorage.checksum())
+    return blockStorage.checksum()
 }
 
 // idea: instead of moving the last element to the first matching gap, find the first non-zero gap, walk backwards,
