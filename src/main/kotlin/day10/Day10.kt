@@ -21,8 +21,12 @@ fun main() {
         }
     }
     val potentialTrailheads = map.filterValues { i -> i == 0 }
+//    potentialTrailheads.toList().sumOf { (pth, _) ->
+//        calculateTrailheadScore(pth, map)
+//    }.also(::println)
+
     potentialTrailheads.toList().sumOf { (pth, _) ->
-        calculateTrailheadScore(pth, map)
+        calculateTrailheadScore2(pth, map)
     }.also(::println)
 }
 
@@ -32,6 +36,31 @@ fun calculateTrailheadScore(entry: Vec2, map: Map<Vec2, Int>): Int {
     println(reaches)
     check(reaches.all { vec2 -> map.getCoord(vec2) == 9 })
     return reaches.toSet().size
+}
+
+fun calculateTrailheadScore2(entry: Vec2, map: Map<Vec2, Int>): Int {
+    println("PART 2")
+    require(map[entry] == 0)
+    val paths: List<List<Vec2>> = walkUpwards2(listOf(entry), map)
+    println(paths)
+    check(paths.all { path -> map.getCoord(path.last()) == 9 })
+    return paths.toSet().size
+}
+
+fun walkUpwards2(path: List<Vec2>, map: Map<Vec2, Int>): List<List<Vec2>> {
+    val curLoc = path.last()
+    val curLevel = map.getCoord(curLoc)
+    if (curLevel > 9) return emptyList()
+    if (curLevel == 9) return listOf(path)
+    val nextLevel = curLevel + 1
+    val res = mutableListOf<List<Vec2>>()
+    for (neighbor in with(curLoc) { listOf(up(), down(), left(), right()) }) {
+        if (map.getCoord(neighbor) == nextLevel) {
+            val potentialTargets = walkUpwards2(path + neighbor, map)
+            res += potentialTargets
+        }
+    }
+    return res
 }
 
 fun Map<Vec2, Int>.getCoord(v: Vec2) = this[v] ?: Int.MAX_VALUE // a _very_ steep cliff.
