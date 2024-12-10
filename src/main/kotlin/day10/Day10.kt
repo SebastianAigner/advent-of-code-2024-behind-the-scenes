@@ -65,9 +65,6 @@ fun walkPathsToSummits(path: List<Vec2>, map: Map<Vec2, Int>): List<Summit> {
 fun countDistinctPathsToSummitForTrailhead(trailhead: Vec2, map: Map<Vec2, Int>): Int {
     require(map[trailhead] == 0)
     val paths: List<Path> = tracePathsToSummits(listOf(trailhead), map)
-    for (x in 0 until 10) {
-        println(x)
-    }
     check(paths.all { path -> map.getCoordinate(path.steps.last()) == 9 })
     return paths.toSet().size
 }
