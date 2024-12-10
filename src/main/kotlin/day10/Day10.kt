@@ -13,70 +13,76 @@ data class Vec2(val x: Int, val y: Int) {
 
 fun main() {
     val lines = input.readLines()
-    val map = mutableMapOf<Vec2, Int>()
+    val map = buildMapFromLines(lines)
+    val potentialTrailheads = map.filterValues { it == 0 }
+    val a = potentialTrailheads.toList().sumOf { (pth, _) ->
+        countReachableSummitsForTrailhead(pth, map)
+    }.also(::println)
+
+    val b = potentialTrailheads.toList().sumOf { (pth, _) ->
+        countDistinctPathsToSummitForTrailhead(pth, map)
+    }.also(::println)
+    check(a == 510)
+    check(b == 1058)
+}
+
+private fun buildMapFromLines(lines: List<String>): Map<Vec2, Int> = buildMap<Vec2, Int> {
     for (y in lines.indices) {
         for (x in lines[0].indices) {
             val char = lines[y][x]
-            map[Vec2(x, y)] = char.digitToInt()
+            put(Vec2(x, y), char.digitToInt())
         }
     }
-    val potentialTrailheads = map.filterValues { i -> i == 0 }
-//    potentialTrailheads.toList().sumOf { (pth, _) ->
-//        calculateTrailheadScore(pth, map)
-//    }.also(::println)
-
-    potentialTrailheads.toList().sumOf { (pth, _) ->
-        calculateTrailheadScore2(pth, map)
-    }.also(::println)
 }
 
-fun calculateTrailheadScore(entry: Vec2, map: Map<Vec2, Int>): Int {
-    require(map[entry] == 0)
-    val reaches = walkUpwards(listOf(entry), map)
-    println(reaches)
-    check(reaches.all { vec2 -> map.getCoord(vec2) == 9 })
-    return reaches.toSet().size
+fun countReachableSummitsForTrailhead(trailhead: Vec2, map: Map<Vec2, Int>): Int {
+    require(map[trailhead] == 0)
+    val reachableSummits = walkPathsToSummits(listOf(trailhead), map)
+    check(reachableSummits.all { summit -> map.getCoord(summit.location) == 9 })
+    return reachableSummits.toSet().size
 }
 
-fun calculateTrailheadScore2(entry: Vec2, map: Map<Vec2, Int>): Int {
-    println("PART 2")
-    require(map[entry] == 0)
-    val paths: List<List<Vec2>> = walkUpwards2(listOf(entry), map)
-    println(paths)
-    check(paths.all { path -> map.getCoord(path.last()) == 9 })
+fun countDistinctPathsToSummitForTrailhead(trailhead: Vec2, map: Map<Vec2, Int>): Int {
+    require(map[trailhead] == 0)
+    val paths: List<Path> = tracePathsToSummits(listOf(trailhead), map)
+    check(paths.all { path -> map.getCoord(path.steps.last()) == 9 })
     return paths.toSet().size
 }
 
-fun walkUpwards2(path: List<Vec2>, map: Map<Vec2, Int>): List<List<Vec2>> {
+@JvmInline
+value class Path(val steps: List<Vec2>)
+
+fun tracePathsToSummits(path: List<Vec2>, map: Map<Vec2, Int>): List<Path> {
     val curLoc = path.last()
     val curLevel = map.getCoord(curLoc)
-    if (curLevel > 9) return emptyList()
-    if (curLevel == 9) return listOf(path)
+    if (curLevel == 9) return listOf(Path(path))
     val nextLevel = curLevel + 1
-    val res = mutableListOf<List<Vec2>>()
+    val walkablePaths = mutableListOf<Path>()
     for (neighbor in with(curLoc) { listOf(up(), down(), left(), right()) }) {
         if (map.getCoord(neighbor) == nextLevel) {
-            val potentialTargets = walkUpwards2(path + neighbor, map)
-            res += potentialTargets
+            val potentialTargets = tracePathsToSummits(path + neighbor, map)
+            walkablePaths += potentialTargets
         }
     }
-    return res
+    return walkablePaths
 }
 
 fun Map<Vec2, Int>.getCoord(v: Vec2) = this[v] ?: Int.MAX_VALUE // a _very_ steep cliff.
 
-fun walkUpwards(path: List<Vec2>, map: Map<Vec2, Int>): List<Vec2> {
+@JvmInline
+value class Summit(val location: Vec2)
+
+fun walkPathsToSummits(path: List<Vec2>, map: Map<Vec2, Int>): List<Summit> {
     val curLoc = path.last()
     val curLevel = map.getCoord(curLoc)
-    if (curLevel > 9) return emptyList()
-    if (curLevel == 9) return listOf(curLoc)
+    if (curLevel == 9) return listOf(Summit(curLoc))
     val nextLevel = curLevel + 1
-    val res = mutableListOf<Vec2>()
+    val reachableSummits = mutableListOf<Summit>()
     for (neighbor in with(curLoc) { listOf(up(), down(), left(), right()) }) {
         if (map.getCoord(neighbor) == nextLevel) {
-            val potentialTargets = walkUpwards(path + neighbor, map)
-            res += potentialTargets
+            val foundSummits = walkPathsToSummits(path + neighbor, map)
+            reachableSummits += foundSummits
         }
     }
-    return res
+    return reachableSummits
 }
