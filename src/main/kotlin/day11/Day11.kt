@@ -1,17 +1,18 @@
 package day11
 
 import java.io.File
+import kotlin.time.measureTimedValue
 
 val input = File("input/day11.txt")
 
 fun main() {
     val line = input.readLines().first().split(" ").map { string -> string.toLong() }
-    val a = part1(line)
+    val a = measureTimedValue { part1(line) }
     println("Part 1: $a")
-    val b = part2(line)
+    val b = measureTimedValue { part2(line) }
     println("Part 2: $b")
-    check(a == 183435)
-    check(b == 218279375708592)
+    check(a.value == 183435)
+    check(b.value == 218279375708592)
 }
 
 private fun part1(line: List<Long>): Int {
@@ -23,22 +24,22 @@ private fun part1(line: List<Long>): Int {
     return modifiedLine.size
 }
 
-fun blink(numbers: List<Long>): List<Long> {
+fun blink(stones: List<Long>): List<Long> {
     return buildList<Long> {
-        for (number in numbers) {
+        for (stone in stones) {
             when {
-                number == 0L -> {
+                stone == 0L -> {
                     add(1L)
                 }
 
-                number.toString().length % 2 == 0 -> { // even digits
-                    val len = number.toString().length
-                    add(number.toString().take(len / 2).toLong())
-                    add(number.toString().takeLast(len / 2).toLong())
+                stone.toString().length % 2 == 0 -> { // even digits
+                    val len = stone.toString().length
+                    add(stone.toString().take(len / 2).toLong())
+                    add(stone.toString().takeLast(len / 2).toLong())
                 }
 
                 else -> {
-                    add(number * 2024L)
+                    add(stone * 2024L)
                 }
             }
         }
@@ -46,20 +47,20 @@ fun blink(numbers: List<Long>): List<Long> {
 }
 
 private fun part2(line: List<Long>): Long {
-    var groups = line.groupingBy { num -> num }.eachCount()
-    var nmList = NonMaterializedList()
-    for ((k, v) in groups) {
-        nmList.add(k.toLong(), v.toLong())
+    var stoneCounts = line.groupingBy { num -> num }.eachCount()
+    var stoneList = NonMaterializedList()
+    for ((k, v) in stoneCounts) {
+        stoneList.add(k.toLong(), v.toLong())
     }
     repeat(75) {
-        nmList = blinkGroups(nmList)
+        stoneList = blinkGroups(stoneList)
     }
-    return nmList.coll.values.sumOf { integer -> integer.toLong() }
+    return stoneList.coll.values.sumOf { integer -> integer.toLong() }
 }
 
-fun blinkGroups(nmList: NonMaterializedList): NonMaterializedList {
+fun blinkGroups(stoneList: NonMaterializedList): NonMaterializedList {
     return buildNonMaterializedList {
-        for ((number, count) in nmList.coll) {
+        for ((number, count) in stoneList.coll) {
             when {
                 number == 0L -> {
                     add(1L, count)
