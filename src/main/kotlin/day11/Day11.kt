@@ -1,71 +1,95 @@
 package day11
 
 import java.io.File
-import java.math.BigInteger
 
 val input = File("input/day11.txt")
 
 fun main() {
-    val line = input.readLines().first().split(" ").map { string -> string.toBigInteger() }
-    var groups = line.groupingBy { integer -> integer }.eachCount()
-    var nmList = NonMaterializedList()
-    for ((k, v) in groups) {
-        nmList.add(k, BigInteger.valueOf(v.toLong()))
-    }
-    repeat(75) {
-        nmList = blinkGroups(nmList)
-        println(nmList)
-    }
-    println(nmList.coll.values.sumOf { integer -> integer.toLong() })
+    val line = input.readLines().first().split(" ").map { string -> string.toLong() }
+    val a = part1(line)
+    println("Part 1: $a")
+    val b = part2(line)
+    println("Part 2: $b")
+    check(a == 183435)
+    check(b == 218279375708592)
 }
 
-fun blinkGroups(nmList: NonMaterializedList): NonMaterializedList {
-    return NonMaterializedList().apply {
-        for ((key, value) in nmList.coll) {
+private fun part1(line: List<Long>): Int {
+    var modifiedLine = line
+    repeat(25) {
+        println(it)
+        modifiedLine = blink(modifiedLine)
+    }
+    return modifiedLine.size
+}
+
+fun blink(numbers: List<Long>): List<Long> {
+    return buildList<Long> {
+        for (number in numbers) {
             when {
-                key == BigInteger.ZERO -> {
-                    add(BigInteger.ONE, value)
+                number == 0L -> {
+                    add(1L)
                 }
 
-                key.toString().length % 2 == 0 -> {
-                    val len = key.toString().length
-                    val top = key.toString().take(len / 2).toBigInteger()
-                    val bot = key.toString().takeLast(len / 2).toBigInteger()
-                    add(top, value)
-                    add(bot, value)
+                number.toString().length % 2 == 0 -> { // even digits
+                    val len = number.toString().length
+                    add(number.toString().take(len / 2).toLong())
+                    add(number.toString().takeLast(len / 2).toLong())
                 }
 
                 else -> {
-                    add(key * BigInteger.valueOf(2024), value)
+                    add(number * 2024L)
                 }
             }
         }
     }
 }
 
-fun blinkOne(i: BigInteger): List<BigInteger> {
-    return when {
-        i == BigInteger.ZERO -> {
-            listOf(BigInteger.ONE)
-        }
+private fun part2(line: List<Long>): Long {
+    var groups = line.groupingBy { num -> num }.eachCount()
+    var nmList = NonMaterializedList()
+    for ((k, v) in groups) {
+        nmList.add(k.toLong(), v.toLong())
+    }
+    repeat(75) {
+        nmList = blinkGroups(nmList)
+    }
+    return nmList.coll.values.sumOf { integer -> integer.toLong() }
+}
 
-        i.toString().length % 2 == 0 -> { // even digits
-            val len = i.toString().length
-            listOf(
-                i.toString().take(len / 2).toBigInteger(),
-                i.toString().takeLast(len / 2).toBigInteger()
-            )
-        }
+fun blinkGroups(nmList: NonMaterializedList): NonMaterializedList {
+    return buildNonMaterializedList {
+        for ((number, count) in nmList.coll) {
+            when {
+                number == 0L -> {
+                    add(1L, count)
+                }
 
-        else -> {
-            listOf(i * BigInteger.valueOf(2024))
+                number.toString().length % 2 == 0 -> {
+                    val len = number.toString().length
+                    val top = number.toString().take(len / 2).toLong()
+                    val bot = number.toString().takeLast(len / 2).toLong()
+                    add(top, count)
+                    add(bot, count)
+                }
+
+                else -> {
+                    add(number * 2024L, count)
+                }
+            }
         }
     }
 }
 
-data class NonMaterializedList(val coll: MutableMap<BigInteger, BigInteger> = mutableMapOf()) {
-    fun add(b: BigInteger, count: BigInteger) {
-        val curr = coll[b] ?: BigInteger.ZERO
+data class NonMaterializedList(val coll: MutableMap<Long, Long> = mutableMapOf()) {
+    fun add(b: Long, count: Long) {
+        val curr = coll[b] ?: 0L
         coll[b] = curr + count
     }
+}
+
+fun buildNonMaterializedList(builder: NonMaterializedList.() -> Unit): NonMaterializedList {
+    val list = NonMaterializedList()
+    list.builder()
+    return list
 }
