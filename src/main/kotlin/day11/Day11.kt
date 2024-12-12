@@ -28,6 +28,7 @@ fun blink(stones: List<Long>): List<Long> {
     return buildList<Long> {
         for (stone in stones) {
             when {
+
                 stone == 0L -> {
                     add(1L)
                 }
@@ -60,22 +61,22 @@ private fun part2(line: List<Long>): Long {
 
 fun blinkGroups(stoneList: NonMaterializedList): NonMaterializedList {
     return buildNonMaterializedList {
-        for ((number, count) in stoneList.coll) {
+        for ((stone, count) in stoneList.coll) {
             when {
-                number == 0L -> {
+                stone == 0L -> {
                     add(1L, count)
                 }
 
-                number.toString().length % 2 == 0 -> {
-                    val len = number.toString().length
-                    val top = number.toString().take(len / 2).toLong()
-                    val bot = number.toString().takeLast(len / 2).toLong()
+                stone.toString().length % 2 == 0 -> {
+                    val len = stone.toString().length
+                    val top = stone.toString().take(len / 2).toLong()
+                    val bot = stone.toString().takeLast(len / 2).toLong()
                     add(top, count)
                     add(bot, count)
                 }
 
                 else -> {
-                    add(number * 2024L, count)
+                    add(stone * 2024L, count)
                 }
             }
         }
