@@ -1,6 +1,7 @@
 package day12
 
 import java.io.File
+import kotlin.math.abs
 
 val input = File("input/day12.txt")
 
@@ -49,13 +50,33 @@ val exE = """
     AAAAAA
 """.trimIndent().lines()
 
+fun countContiguousGroups(list: List<Vec2>): Int {
+    if (list.isEmpty()) return 0
+    val allGroups = mutableListOf<List<Vec2>>()
+    var currGroup = mutableListOf<Vec2>()
+    for (elem in list) {
+        if (currGroup.isEmpty() || currGroup.last().dist(elem) <= 1) {
+            currGroup += elem
+        } else {
+            allGroups.add(currGroup)
+            currGroup = mutableListOf<Vec2>()
+            currGroup.add(elem)
+        }
+    }
+    if (currGroup.isNotEmpty()) {
+        allGroups.add(currGroup)
+    }
+    return allGroups.size
+}
+
 fun main() {
     val lines = input.readLines()
+    check(countContiguousGroups(listOf(Vec2(0, 0), Vec2(1, 0), Vec2(3, 0))).also { i -> println("groups is $i") } == 2)
 //    println(lines)
-    check(part1(exA).also { lng -> println("exA $lng") } == 140)
-    check(part1(exB).also { lng -> println("exB $lng") } == 772)
-    check(part1(exC).also { lng -> println("exC $lng") } == 1930)
-    println("PART 1: ${part1(lines)}")
+//    check(part1(exA).also { lng -> println("exA $lng") } == 140)
+//    check(part1(exB).also { lng -> println("exB $lng") } == 772)
+//    check(part1(exC).also { lng -> println("exC $lng") } == 1930)
+//    println("PART 1: ${part1(lines)}")
     check(part2(exA).also { lng -> println("exA $lng") } == 80)
     check(part2(exB).also { lng -> println("exB $lng") } == 436)
     check(part2(exD).also { lng -> println("exC $lng") } == 236)
@@ -70,6 +91,7 @@ data class Vec2(val x: Int, val y: Int) {
     fun left() = Vec2(x - 1, y)
     fun right() = Vec2(x + 1, y)
     operator fun plus(other: Vec2) = Vec2(x + other.x, y + other.y)
+    fun dist(other: Vec2): Int = abs(x - other.x) + abs(y - other.y)
 }
 
 enum class Heading(val step: Vec2) {
@@ -100,17 +122,6 @@ fun part2(lines: List<String>): Int {
             }
         }
     }
-    val zoomedCoordinates = buildMap {
-        for (y in lines.indices) {
-            for (x in lines[0].indices) {
-                repeat(3) { dy ->
-                    repeat(3) { dx ->
-                        put(Vec2(x * 3 + dx, y * 3 + dy), lines[y][x])
-                    }
-                }
-            }
-        }
-    }
     val untouchedLocations = ArrayList<Vec2>(allCoordinates)
     val groups = buildList {
         while (untouchedLocations.isNotEmpty()) {
@@ -121,7 +132,7 @@ fun part2(lines: List<String>): Int {
         }
     }
     val areas = groups.map { vec2s -> vec2s.size }.also(::println)
-    val sides = groups.map { vec2s -> countSides(zoomedCoordinates) }.also(::println)
+    val sides = groups.map { vec2s -> countSidesOfPlot(vec2s, ::getPlantAt) }.also(::println)
 
     val prices = areas.zip(sides, transform = { area, sides ->
         println("$area x $sides")
@@ -130,57 +141,84 @@ fun part2(lines: List<String>): Int {
     return prices.sum()
 }
 
-fun countSides(zoomedPlot: Map<Vec2, Char>): Int {
-    val plantType = zoomedPlot.values.first()
-    // begin: perimeter
-    println("perimeter for type $plantType")
-    val plotAdjacentLocations = buildList<Vec2> { // this is NOT a set!
-        for (loc in zoomedPlot.keys) {
-            val neighbors = with(loc) { listOf(up(), down(), left(), right()) }
-            val adjacentNeighbors =
-                neighbors.filter { vec2 -> zoomedPlot[vec2] != plantType /*&& at(vec2) != '?'*/ } // important NOT to exlcude '?"
-            addAll(adjacentNeighbors)
+fun countSidesOfPlot(points: List<Vec2>, at: (Vec2) -> Char): Int {
+    val plantType = at(points.first())
+    println("======")
+    println("Working on type $plantType ($points)")
+    val xRange = (points.minOf { vec2 -> vec2.x }) - 1..(points.maxOf { it.x }) + 1
+    val yRange = (points.minOf { vec2 -> vec2.y }) - 1..(points.maxOf { it.y }) + 1
+    val tophorEdgeVecs = buildList {
+        for (y in yRange) {
+            add(buildList {
+                for (x in xRange) {
+                    val loc = Vec2(x, y)
+                    if (at(loc) != plantType && loc.down() in points) {
+                        // top edge
+                        add(loc)
+                    }
+                }
+            })
         }
+    }.filter { edgevec -> edgevec.isNotEmpty() }
+    println("Horizontal Edge Squares Top: $tophorEdgeVecs")
+    val botHorEdgeVecs = buildList {
+        for (y in yRange) {
+            add(buildList {
+                for (x in xRange) {
+                    val loc = Vec2(x, y)
+                    if (at(loc) != plantType && loc.up() in points) {
+                        //bottom edge
+                        add(loc)
+                    }
+                }
+            })
+        }
+    }.filter { edgevec -> edgevec.isNotEmpty() }
+    println("Horizontal Edge Squares Bottom: $botHorEdgeVecs")
+    val leftverEdgeVecs = buildList {
+        for (x in xRange) {
+            add(buildList {
+                for (y in yRange) {
+                    val loc = Vec2(x, y)
+                    if (at(loc) != plantType && loc.right() in points) {
+                        add(loc)
+                    }
+                }
+            })
+        }
+    }.filter { edgevec -> edgevec.isNotEmpty() }
+    println("Vertical Edge Squares Left: $leftverEdgeVecs")
+
+    val rightverEdgeVecs = buildList {
+        for (x in xRange) {
+            add(buildList {
+                for (y in yRange) {
+                    val loc = Vec2(x, y)
+                    if (at(loc) != plantType && loc.left() in points) {
+                        add(loc)
+                    }
+                }
+            })
+        }
+    }.filter { edgevec -> edgevec.isNotEmpty() }
+    println("Vertical Edge Squares Right: $rightverEdgeVecs")
+
+    val horizontalTopSegments = tophorEdgeVecs.sumOf { vecLine ->
+        countContiguousGroups(vecLine)
     }
-    // end: perimeter
-    // approach: pick any point on the perimeter where our right hand touches the shape.
-    // attempt to walk right, leaving the right hand on the shape.
-    // if we were to depart from the shape, take a right turn.
-    // increment number of sides by one.
-    // we zoomed to 3x, so dead ends are no longer a problem.
-    // worried about an off by one if we start in the middle of the current side. hopefully it's okay.
-    val startingPoint = plotAdjacentLocations.first { adjLoc ->
-        adjLoc.right() in zoomedPlot.keys
+    val horizontalBotSegments = botHorEdgeVecs.sumOf { vecLine ->
+        countContiguousGroups(vecLine)
     }
-    var sideCnt = 1
-    val startHeading = Heading.NORTH
-    var currPos = startingPoint
-    var currHeading = startHeading
-    do {
-        val squareWeAreFacing = currPos + currHeading.step
-        val directionHandPointsIn = currHeading.rotateRight()
-        val squareHandTouches = currPos + directionHandPointsIn.step
-        if (squareHandTouches in zoomedPlot.keys && squareWeAreFacing !in zoomedPlot.keys) {
-            // we're touching the wall and there's a free space in front of us. take a step.
-            currPos += currHeading.step
-            continue
-        }
-        if (squareHandTouches in zoomedPlot.keys && squareWeAreFacing in zoomedPlot.keys) {
-            // we're touching, but there's a wall in front of us. rotate left, start a new segment!
-            currHeading = currHeading.rotateLeft()
-            sideCnt++
-            continue
-        }
-        if (squareHandTouches !in zoomedPlot.keys) {
-            // we lost contact, so we perform the following:
-            // turn right, take a step forward.
-            // this starts a new side.
-            sideCnt++
-            currHeading = currHeading.rotateRight()
-            currPos += currHeading.step
-        }
-    } while (currPos != startingPoint || currHeading != startHeading)
-    return sideCnt
+
+    val verticalLeftSegements = leftverEdgeVecs.sumOf { vecColumn ->
+        countContiguousGroups(vecColumn)
+    }
+
+    val verticalRightSegements = rightverEdgeVecs.sumOf { vecColumn ->
+        countContiguousGroups(vecColumn)
+    }
+
+    return horizontalTopSegments + horizontalBotSegments + verticalRightSegements + verticalLeftSegements
 }
 
 // NOTE: there can be more than one plot per type of plant!
