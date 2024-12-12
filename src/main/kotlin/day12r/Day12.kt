@@ -99,10 +99,10 @@ value class FenceableRegion(val coordinates: List<Vec2>) {
                 }
             }
             val horizontalTopSegments = horizontalTopEdges.sumOf { countContiguousGroups(it) }
-            val horizontalBotSegments = horizontalBottomEdges.sumOf { countContiguousGroups(it) }
+            val horizontalBottomSegments = horizontalBottomEdges.sumOf { countContiguousGroups(it) }
             val verticalLeftSegements = verticalLeftEdges.sumOf { countContiguousGroups(it) }
             val verticalRightSegements = verticalRightEdges.sumOf { countContiguousGroups(it) }
-            return horizontalTopSegments + horizontalBotSegments + verticalRightSegements + verticalLeftSegements
+            return horizontalTopSegments + horizontalBottomSegments + verticalRightSegements + verticalLeftSegements
         }
 }
 
