@@ -50,6 +50,7 @@ value class FenceableRegion(val coordinates: List<Vec2>) {
         get() {
             val xRange = (coordinates.minOf { vec2 -> vec2.x }) - 1..(coordinates.maxOf { it.x }) + 1
             val yRange = (coordinates.minOf { vec2 -> vec2.y }) - 1..(coordinates.maxOf { it.y }) + 1
+            // no merging these -- we need to keep top and bottom edges separately to not accidentally connect them!
             val horizontalTopEdges = buildList {
                 for (y in yRange) {
                     add(buildList {
