@@ -50,54 +50,69 @@ data class Vec2(val x: Int, val y: Int) {
     fun dist(other: Vec2): Int = abs(x - other.x) + abs(y - other.y)
 }
 
-// NOTE: there can be more than one plot per type of plant!
-fun part1(lines: List<String>): Int {
-    println(lines.joinToString("\n"))
-    fun getPlantAt(v: Vec2) = if (v.x in lines[0].indices && v.y in lines.indices) lines[v.y][v.x] else '?'
-    val allCoordinates = buildList {
-        for (y in lines.indices) {
-            for (x in lines[0].indices) {
-                add(Vec2(x, y))
+@JvmInline
+value class FenceableRegion(val coordinates: List<Vec2>) {
+    val area get() = coordinates.size
+    val perimeter: Int
+        get() {
+            val plotAdjacentLocations = buildList<Vec2> { // this is NOT a set!
+                for (loc in coordinates) {
+                    val neighbors = with(loc) { listOf(up(), down(), left(), right()) }
+                    val adjacentNeighbors =
+                        neighbors.filter { vec2 -> vec2 !in coordinates } // important NOT to exlcude '?"
+                    addAll(adjacentNeighbors)
+                }
             }
+            println(plotAdjacentLocations)
+            return plotAdjacentLocations.size
         }
-    }
-    val untouchedLocations = ArrayList<Vec2>(allCoordinates)
-    val groups = buildList {
-        while (untouchedLocations.isNotEmpty()) {
-            val group = findGroupForLocation(untouchedLocations.first(), ::getPlantAt)
-            untouchedLocations.removeAll(group)
-            add(group)
-            println("found group $group")
-        }
-    }
-    val areas = groups.map { it.size }.also(::println)
-    val perimeters = groups.map { calculatePerimeter(it, ::getPlantAt) }.also(::println)
-    val prices = areas.zip(perimeters, transform = { area, perimeter ->
-        println("$area x $perimeter")
+}
+
+fun List<String>.getPlantAt(v: Vec2) = if (v.x in this[0].indices && v.y in this.indices) this[v.y][v.x] else '?'
+
+// NOTE: there can be more than one plot per type of plant!
+fun part1(farmLines: List<String>): Int {
+    val allCoordinates = getAllCoordinates(farmLines)
+    val regions = findFenceablePlantRegions(allCoordinates, farmLines)
+    val areas = regions.map { it.area }.also(::println)
+    val perimeters = regions.map { it.perimeter }.also(::println)
+    val prices = areas.zip(perimeters) { area, perimeter ->
         area * perimeter
-    })
+    }
     return prices.sum()
 }
 
-fun part2(lines: List<String>): Int {
-    fun getPlantAt(v: Vec2) = if (v.x in lines[0].indices && v.y in lines.indices) lines[v.y][v.x] else '?'
-    val allCoordinates = buildList {
-        for (y in lines.indices) {
-            for (x in lines[0].indices) {
-                add(Vec2(x, y))
-            }
+
+private fun findFenceablePlantRegions(
+    allCoordinates: List<Vec2>,
+    farmLines: List<String>,
+): List<FenceableRegion> {
+    val untouchedCoordinates = allCoordinates.toMutableList()
+    val regions = buildList {
+        while (untouchedCoordinates.isNotEmpty()) {
+            val region = findRegionForCoordinate(untouchedCoordinates.first(), farmLines::getPlantAt)
+            untouchedCoordinates.removeAll(region.coordinates)
+            add(region)
         }
     }
-    val untouchedLocations = allCoordinates.toMutableList()
-    val groups = buildList {
-        while (untouchedLocations.isNotEmpty()) {
-            val group = findGroupForLocation(untouchedLocations.first(), ::getPlantAt)
-            untouchedLocations.removeAll(group)
-            add(group)
+    return regions
+}
+
+private fun getAllCoordinates(lines: List<String>): List<Vec2> = buildList {
+    for (y in lines.indices) {
+        for (x in lines[0].indices) {
+            add(Vec2(x, y))
         }
     }
-    val areas = groups.map { vec2s -> vec2s.size }.also(::println)
-    val sides = groups.map { vec2s -> countSidesOfPlot(vec2s, ::getPlantAt) }.also(::println)
+}
+
+fun part2(farmLines: List<String>): Int {
+    fun getPlantAt(v: Vec2) = if (v.x in farmLines[0].indices && v.y in farmLines.indices) farmLines[v.y][v.x] else '?'
+
+    val allCoordinates = getAllCoordinates(farmLines)
+    val regions = findFenceablePlantRegions(allCoordinates, farmLines)
+    val areas = regions.map { it.area }.also(::println)
+    val sides = regions.map { vec2s -> countSidesOfPlot(vec2s.coordinates, ::getPlantAt) }.also(::println)
 
     val prices = areas.zip(sides, transform = { area, sides ->
         println("$area x $sides")
@@ -187,36 +202,21 @@ fun countSidesOfPlot(points: List<Vec2>, at: (Vec2) -> Char): Int {
 }
 
 
-fun findGroupForLocation(vec2: Vec2, at: (Vec2) -> Char): List<Vec2> {
-    // flood fill?
+fun findRegionForCoordinate(vec2: Vec2, at: (Vec2) -> Char): FenceableRegion {
     val plantType = at(vec2)
-    return buildList {
+    val coordinates = buildList {
         val locationsToCheck = ArrayList<Vec2>(listOf(vec2))
         add(vec2)
         while (locationsToCheck.isNotEmpty()) {
             val currentLocation = locationsToCheck.removeFirst()
             val neighbors = with(currentLocation) { listOf(up(), down(), left(), right()) }
-            val neighborTypes = neighbors.map { vec2 -> at(vec2) }
             val validNeighbors = neighbors.filter { vec2 -> at(vec2) == plantType }
             val newNeighbors = validNeighbors.filter { vec2 -> vec2 !in this }
             locationsToCheck.addAll(newNeighbors)
             this.addAll(newNeighbors)
         }
     }
+    return FenceableRegion(coordinates)
 }
 
 
-fun calculatePerimeter(vec2s: List<Vec2>, at: (Vec2) -> Char): Int {
-    val plantType = at(vec2s.first())
-    println("perimeter for type $plantType")
-    val plotAdjacentLocations = buildList<Vec2> { // this is NOT a set!
-        for (loc in vec2s) {
-            val neighbors = with(loc) { listOf(up(), down(), left(), right()) }
-            val adjacentNeighbors =
-                neighbors.filter { vec2 -> at(vec2) != plantType /*&& at(vec2) != '?'*/ } // important NOT to exlcude '?"
-            addAll(adjacentNeighbors)
-        }
-    }
-    println(plotAdjacentLocations)
-    return plotAdjacentLocations.size
-}
