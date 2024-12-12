@@ -107,12 +107,10 @@ private fun getAllCoordinates(lines: List<String>): List<Vec2> = buildList {
 }
 
 fun part2(farmLines: List<String>): Int {
-    fun getPlantAt(v: Vec2) = if (v.x in farmLines[0].indices && v.y in farmLines.indices) farmLines[v.y][v.x] else '?'
-
     val allCoordinates = getAllCoordinates(farmLines)
     val regions = findFenceablePlantRegions(allCoordinates, farmLines)
     val areas = regions.map { it.area }.also(::println)
-    val sides = regions.map { vec2s -> countSidesOfPlot(vec2s.coordinates, ::getPlantAt) }.also(::println)
+    val sides = regions.map { countSidesOfRegion(it) }.also(::println)
 
     val prices = areas.zip(sides, transform = { area, sides ->
         println("$area x $sides")
@@ -121,82 +119,64 @@ fun part2(farmLines: List<String>): Int {
     return prices.sum()
 }
 
-fun countSidesOfPlot(points: List<Vec2>, at: (Vec2) -> Char): Int {
-    val plantType = at(points.first())
-    println("======")
-    println("Working on type $plantType ($points)")
-    val xRange = (points.minOf { vec2 -> vec2.x }) - 1..(points.maxOf { it.x }) + 1
-    val yRange = (points.minOf { vec2 -> vec2.y }) - 1..(points.maxOf { it.y }) + 1
-    val tophorEdgeVecs = buildList {
+fun countSidesOfRegion(region: FenceableRegion): Int {
+    val coordinates = region.coordinates
+    val xRange = (coordinates.minOf { vec2 -> vec2.x }) - 1..(coordinates.maxOf { it.x }) + 1
+    val yRange = (coordinates.minOf { vec2 -> vec2.y }) - 1..(coordinates.maxOf { it.y }) + 1
+    val horizontalTopEdges = buildList {
         for (y in yRange) {
             add(buildList {
                 for (x in xRange) {
                     val loc = Vec2(x, y)
-                    if (at(loc) != plantType && loc.down() in points) {
-                        // top edge
+                    if (loc !in coordinates && loc.down() in coordinates) {
                         add(loc)
                     }
                 }
             })
         }
-    }.filter { edgevec -> edgevec.isNotEmpty() }
-    println("Horizontal Edge Squares Top: $tophorEdgeVecs")
-    val botHorEdgeVecs = buildList {
+    }
+    val horizontalBottomEdges = buildList {
         for (y in yRange) {
             add(buildList {
                 for (x in xRange) {
                     val loc = Vec2(x, y)
-                    if (at(loc) != plantType && loc.up() in points) {
-                        //bottom edge
+                    if (loc !in coordinates && loc.up() in coordinates) {
                         add(loc)
                     }
                 }
             })
         }
-    }.filter { edgevec -> edgevec.isNotEmpty() }
-    println("Horizontal Edge Squares Bottom: $botHorEdgeVecs")
-    val leftverEdgeVecs = buildList {
+    }
+    val verticalLeftEdges = buildList {
         for (x in xRange) {
             add(buildList {
                 for (y in yRange) {
                     val loc = Vec2(x, y)
-                    if (at(loc) != plantType && loc.right() in points) {
+                    if (loc !in coordinates && loc.right() in coordinates) {
                         add(loc)
                     }
                 }
             })
         }
-    }.filter { edgevec -> edgevec.isNotEmpty() }
-    println("Vertical Edge Squares Left: $leftverEdgeVecs")
+    }
 
-    val rightverEdgeVecs = buildList {
+    val verticalRightEdges = buildList {
         for (x in xRange) {
             add(buildList {
                 for (y in yRange) {
                     val loc = Vec2(x, y)
-                    if (at(loc) != plantType && loc.left() in points) {
+                    if (loc !in coordinates && loc.left() in coordinates) {
                         add(loc)
                     }
                 }
             })
         }
-    }.filter { edgevec -> edgevec.isNotEmpty() }
-    println("Vertical Edge Squares Right: $rightverEdgeVecs")
-
-    val horizontalTopSegments = tophorEdgeVecs.sumOf { vecLine ->
-        countContiguousGroups(vecLine)
-    }
-    val horizontalBotSegments = botHorEdgeVecs.sumOf { vecLine ->
-        countContiguousGroups(vecLine)
     }
 
-    val verticalLeftSegements = leftverEdgeVecs.sumOf { vecColumn ->
-        countContiguousGroups(vecColumn)
-    }
-
-    val verticalRightSegements = rightverEdgeVecs.sumOf { vecColumn ->
-        countContiguousGroups(vecColumn)
-    }
+    val horizontalTopSegments = horizontalTopEdges.sumOf { countContiguousGroups(it) }
+    val horizontalBotSegments = horizontalBottomEdges.sumOf { countContiguousGroups(it) }
+    val verticalLeftSegements = verticalLeftEdges.sumOf { countContiguousGroups(it) }
+    val verticalRightSegements = verticalRightEdges.sumOf { countContiguousGroups(it) }
 
     return horizontalTopSegments + horizontalBotSegments + verticalRightSegements + verticalLeftSegements
 }
