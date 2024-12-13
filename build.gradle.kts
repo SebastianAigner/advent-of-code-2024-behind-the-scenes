@@ -28,6 +28,10 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation(compose.foundation)
     implementation(compose.material3)
+//    implementation(files("SymJava-1.1.2.jar"))
+//    implementation(group = "org.ejml", name = "ejml-all", version = "0.43")
+    implementation("tools.aqua:z3-turnkey:4.13.0.1")
+
 }
 
 composeCompiler {
