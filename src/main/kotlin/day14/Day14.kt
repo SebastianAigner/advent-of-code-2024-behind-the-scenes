@@ -22,6 +22,7 @@ fun main() {
     val lines = input.readLines()
     check(part1(input = exInput, width = 11, height = 7) == 12)
     println(part1(lines, width = 101, height = 103))
+    part2(lines, width = 101, height = 103)
 }
 
 data class Vec2(val x: Int, val y: Int) {
@@ -33,6 +34,51 @@ data class Vec2(val x: Int, val y: Int) {
 }
 
 data class Robot(val pos: Vec2, val vel: Vec2)
+
+fun part2(input: List<String>, width: Int, height: Int): Int {
+    println(input)
+    val start = input.map {
+        val re = """p=(-?\d+),(-?\d+) v=(-?\d+),(-?\d+)""".toRegex()
+        println(it)
+        val (pX, pY, vX, vY) = re.find(it)!!.destructured
+        Robot(Vec2(pX.toInt(), pY.toInt()), Vec2(vX.toInt(), vY.toInt()))
+    }
+    println(input)
+    var roboLocs = start
+    var iteration = 0
+    while (true) {
+        roboLocs = roboLocs.map {
+            val newLoc = (it.pos + it.vel).mod(width, height)
+            Robot(newLoc, it.vel)
+        }
+        val debugString = debugPrint(roboLocs, width, height)
+        val isAnagrams = debugString.lines().count { it == it.reversed() }
+        val isFramed = debugString.lines().any { it.contains("##########") }
+        ++iteration
+        println(iteration)
+        if (isFramed) {
+            println(debugString)
+            println("above is ${iteration}")
+            readln()
+        }
+    }
+    return 0
+}
+
+fun debugPrint(r: List<Robot>, w: Int, h: Int): String {
+    val debugString = buildString {
+        for (y in 0..h - 1) {
+            for (x in 0..w - 1) {
+                val vec = Vec2(x, y)
+                val char = if (r.any { it.pos == vec }) '#' else '.'
+                append(char)
+            }
+            appendLine()
+        }
+    }
+    //println(debugString)
+    return debugString
+}
 
 fun part1(input: List<String>, width: Int, height: Int): Int {
     println(input)
