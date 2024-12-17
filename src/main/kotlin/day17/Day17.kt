@@ -9,7 +9,7 @@ fun main() {
     var regA = lines[0].takeLastWhile { it.isDigit() }.toInt()
     var regB = lines[1].takeLastWhile { it.isDigit() }.toInt()
     var regC = lines[2].takeLastWhile { it.isDigit() }.toInt()
-    var ip = -1
+    var ip = 0
     val program = lines[4].removePrefix("Program: ").split(",").map { it.toInt() }
     fun valueOfComboOp(op: Int): Int {
         return when (op) {
@@ -27,7 +27,7 @@ fun main() {
 
     val final = StringBuilder()
     do {
-        val inst = program[++ip]
+        val inst = program[ip]
         println("INST $inst at IP $ip")
         when (inst) {
             0 -> {
@@ -36,6 +36,7 @@ fun main() {
                 val denom = valueOfComboOp(program[++ip])
                 val res = num / denom
                 regA = res
+                ip++
             }
 
             1 -> {
@@ -43,6 +44,7 @@ fun main() {
                 val x = regA
                 val lit = program[++ip]
                 regB = x xor lit
+                ip++
             }
 
             2 -> {
@@ -50,6 +52,7 @@ fun main() {
                 val co = valueOfComboOp(program[++ip])
                 val modded = co % 8
                 regB = modded
+                ip++
             }
 
             3 -> {
@@ -57,7 +60,7 @@ fun main() {
                 if (regA == 0) {
                     ip += 2
                 } else {
-                    ip = program[ip + 1]
+                    ip = program[ip]
                 }
             }
 
@@ -73,6 +76,7 @@ fun main() {
                 val output = valueOfComboOp(program[++ip]) % 8
                 println("OUT $output")
                 final.append("$output,")
+                ip++
             }
 
             6 -> {
@@ -81,6 +85,7 @@ fun main() {
                 val denom = valueOfComboOp(program[++ip])
                 val res = num / denom
                 regB = res
+                ip++
             }
 
             7 -> {
@@ -88,6 +93,7 @@ fun main() {
                 val denom = valueOfComboOp(program[++ip])
                 val res = num / denom
                 regC = res
+                ip++
             }
         }
     } while (ip + 1 in program.indices)
