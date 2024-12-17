@@ -104,5 +104,5 @@ fun main() {
     } catch (e: Exception) {
         println(e.stackTraceToString())
     }
-    println(final)
+    println(final.removeSuffix(","))
 }
